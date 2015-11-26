@@ -38,10 +38,16 @@ namespace dromozoa {
     lua_setfield(L, -2, key);
   }
 
+  inline PRL_HANDLE check_handle(lua_State* L, int n) {
+    return *static_cast<PRL_HANDLE*>(lua_touserdata(L, n));
+  }
+
   inline void save_metatable_index(lua_State* L, const char* name) {
     luaL_newmetatable(L, name);
     lua_pushvalue(L, -2);
     lua_setfield(L, -2, "__index");
+    lua_pushstring(L, name);
+    lua_setfield(L, -2, "name");
     lua_pop(L, 1);
   }
 
@@ -83,6 +89,9 @@ namespace dromozoa {
   }
 
   inline int result_handle(lua_State* L, PRL_HANDLE result) {
+
+    std::cerr << "handle: " << result << "\n";
+
     if (result == PRL_INVALID_HANDLE) {
       return 0;
     }
@@ -104,9 +113,15 @@ namespace dromozoa {
       }
     }
 
-    lua_pushlightuserdata(L, result);
+    std::cerr << lua_gettop(L) << std::endl;
+
+    void* data = lua_newuserdata(L, sizeof(PRL_HANDLE));
+    *static_cast<PRL_HANDLE*>(data) = result;
+    // lua_pushlightuserdata(L, result);
     luaL_getmetatable(L, name);
     lua_setmetatable(L, -2);
+
+    std::cerr << lua_gettop(L) << std::endl;
 
     return 1;
   }
@@ -156,7 +171,7 @@ namespace dromozoa {
 
     set_field(L, "free", [](lua_State* L) {
       PRL_RESULT result = PrlHandle_Free(
-          static_cast<PRL_HANDLE>(lua_touserdata(L, 1)));
+          check_handle(L, 1));
       if (PRL_FAILED(result)) {
         return result_error(L, "could not PrlHandle_Free", result);
       } else {
@@ -167,7 +182,7 @@ namespace dromozoa {
     set_field(L, "get_type", [](lua_State* L) {
       PRL_HANDLE_TYPE type = PHT_ERROR;
       PRL_RESULT result = PrlHandle_GetType(
-          static_cast<PRL_HANDLE>(lua_touserdata(L, 1)),
+          check_handle(L, 1),
           &type);
       if (PRL_FAILED(result)) {
         return result_error(L, "could not PrlHandle_GetType", result);
@@ -186,7 +201,7 @@ namespace dromozoa {
 
     set_field(L, "wait", [](lua_State* L) {
       PRL_RESULT result = PrlJob_Wait(
-          static_cast<PRL_HANDLE>(lua_touserdata(L, 1)),
+          check_handle(L, 1),
           luaL_optinteger(L, 2, std::numeric_limits<std::uint32_t>::max()));
       if (PRL_FAILED(result)) {
         return result_error(L, "could not PrlJob_Wait", result);
@@ -195,7 +210,56 @@ namespace dromozoa {
       }
     });
 
+    set_field(L, "get_result", [](lua_State* L) {
+      PRL_HANDLE handle = PRL_INVALID_HANDLE;
+      PRL_RESULT result = PrlJob_GetResult(
+          check_handle(L, 1),
+          &handle);
+      if (PRL_FAILED(result)) {
+        return result_error(L, "could not PrlJob_GetResult", result);
+      } else {
+        return result_handle(L, handle);
+      }
+    });
+
+    set_field(L, "get_ret_code", [](lua_State* L) {
+      PRL_RESULT code = PRL_ERR_SUCCESS;
+      PRL_RESULT result = PrlJob_GetRetCode(
+          check_handle(L, 1),
+          &code);
+      if (PRL_FAILED(result)) {
+        return result_error(L, "could not PrlJob_GetRetCode", result);
+      } else {
+        lua_pushstring(L, prl_result_to_string(code));
+        lua_pushinteger(L, code);
+        return 2;
+      }
+    });
+
     save_metatable_index(L, "dromozoa.prl.api.job");
+    luaL_getmetatable(L, "dromozoa.prl.api.handle");
+    lua_setmetatable(L, -2);
+
+    return 1;
+  }
+
+  inline int open_api_result(lua_State* L) {
+    lua_newtable(L);
+
+    set_field(L, "get_params_count", [](lua_State* L) {
+      PRL_UINT32 count = 0;
+      PRL_RESULT result = PrlResult_GetParamsCount(
+          check_handle(L, 1),
+          &count);
+      if (PRL_FAILED(result)) {
+        return result_error(L, "could not PrlResult_GetParamsCount", result);
+      } else {
+        lua_pushinteger(L, count);
+        return 1;
+      }
+    });
+
+    save_metatable_index(L, "dromozoa.prl.api.result");
     luaL_getmetatable(L, "dromozoa.prl.api.handle");
     lua_setmetatable(L, -2);
 
@@ -215,9 +279,19 @@ namespace dromozoa {
       }
     });
 
+    set_field(L, "get_vm_list", [](lua_State* L) {
+      PRL_HANDLE handle = PrlSrv_GetVmList(
+          check_handle(L, 1));
+      if (handle == PRL_INVALID_HANDLE) {
+        return result_error(L, "could not PrlSrv_GetVmList", PRL_ERR_INVALID_HANDLE);
+      } else {
+        return result_handle(L, handle);
+      }
+    });
+
     set_field(L, "login_local", [](lua_State* L) {
       PRL_HANDLE handle = PrlSrv_LoginLocal(
-          static_cast<PRL_HANDLE>(lua_touserdata(L, 1)),
+          check_handle(L, 1),
           lua_tostring(L, 2),
           luaL_optinteger(L, 3, 0),
           static_cast<PRL_SECURITY_LEVEL>(luaL_optinteger(L, 4, PSL_NORMAL_SECURITY)));
@@ -230,7 +304,7 @@ namespace dromozoa {
 
     set_field(L, "logoff", [](lua_State* L) {
       PRL_HANDLE handle = PrlSrv_Logoff(
-          static_cast<PRL_HANDLE>(lua_touserdata(L, 1)));
+          check_handle(L, 1));
       if (handle == PRL_INVALID_HANDLE) {
         return result_error(L, "could not PrlSrv_Logoff", PRL_ERR_INVALID_HANDLE);
       } else {
@@ -285,6 +359,9 @@ namespace dromozoa {
 
     open_api_job(L);
     lua_setfield(L, -2, "job");
+
+    open_api_result(L);
+    lua_setfield(L, -2, "result");
 
     open_api_server(L);
     lua_setfield(L, -2, "server");
