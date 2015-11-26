@@ -33,13 +33,18 @@ extern "C" {
   dromozoa::set_field(L, #value, (value))
 
 namespace dromozoa {
-  inline PRL_HANDLE check_handle(lua_State* L, int n) {
-    return *static_cast<PRL_HANDLE*>(lua_touserdata(L, n));
-  }
-
   inline void set_field(lua_State* L, const char* key, lua_Integer value) {
     lua_pushinteger(L, value);
     lua_setfield(L, -2, key);
+  }
+
+  inline void set_field(lua_State* L, const char* key, lua_CFunction value) {
+    lua_pushcfunction(L, value);
+    lua_setfield(L, -2, key);
+  }
+
+  inline PRL_HANDLE check_handle(lua_State* L, int n) {
+    return *static_cast<PRL_HANDLE*>(lua_touserdata(L, n));
   }
 
   inline void save_metatable_index(lua_State* L, const char* name) {
@@ -49,11 +54,6 @@ namespace dromozoa {
     lua_pushstring(L, name);
     lua_setfield(L, -2, "name");
     lua_pop(L, 1);
-  }
-
-  inline void set_field(lua_State* L, const char* key, lua_CFunction value) {
-    lua_pushcfunction(L, value);
-    lua_setfield(L, -2, key);
   }
 
   inline int result_boolean(lua_State* L, bool result) {
