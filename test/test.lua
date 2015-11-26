@@ -7,18 +7,13 @@ assert(prl.sdk_wrap.is_loaded())
 assert(prl.api.init_ex())
 
 local server = assert(prl.api.server.create())
-assert(prl.api.handle.get_type(server) == "PHT_SERVER")
+assert(server:get_type() == "PHT_SERVER")
 
-local job = assert(prl.api.server.login_local(server))
-print(prl.api.handle.get_type(job))
-assert(prl.api.job.wait(job))
+local job = assert(server:login_local())
+assert(job:get_type() == "PHT_JOB")
+assert(job:wait())
 assert(job:free())
--- assert(prl.api.handle.free(job))
-assert(prl.api.handle.free(server))
-
--- print(prl.api.handle)
--- print(getmetatable(prl.api.job).__index)
--- print(prl.api.job.free)
+assert(server:free())
 
 assert(prl.api.deinit())
 

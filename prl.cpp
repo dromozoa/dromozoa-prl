@@ -38,6 +38,13 @@ namespace dromozoa {
     lua_setfield(L, -2, key);
   }
 
+  inline void save_metatable_index(lua_State* L, const char* name) {
+    luaL_newmetatable(L, name);
+    lua_pushvalue(L, -2);
+    lua_setfield(L, -2, "__index");
+    lua_pop(L, 1);
+  }
+
   inline void set_field(lua_State* L, const char* key, lua_CFunction value) {
     lua_pushcfunction(L, value);
     lua_setfield(L, -2, key);
@@ -61,24 +68,6 @@ namespace dromozoa {
     return 1;
   }
 
-  inline int result_handle(lua_State* L, PRL_HANDLE result) {
-    lua_pushlightuserdata(L, result);
-
-    PRL_HANDLE_TYPE type = PHT_ERROR;
-    if (!PRL_FAILED(PrlHandle_GetType(result, &type))) {
-      switch (type) {
-        case PHT_JOB:
-          luaL_getmetatable(L, "dromozoa.prl.api.job");
-          lua_setmetatable(L, -2);
-          break;
-        default:
-          break;
-      }
-    }
-
-    return 1;
-  }
-
   inline int result_error(lua_State* L, const char* message, int result) {
     const char* reason = 0;
     if (PrlDbg_PrlResultToString) {
@@ -91,6 +80,35 @@ namespace dromozoa {
       lua_pushfstring(L, "%s: %d", message, result);
     }
     return 2;
+  }
+
+  inline int result_handle(lua_State* L, PRL_HANDLE result) {
+    if (result == PRL_INVALID_HANDLE) {
+      return 0;
+    }
+
+    const char* name = 0;
+
+    PRL_HANDLE_TYPE type = PHT_ERROR;
+    if (!PRL_FAILED(PrlHandle_GetType(result, &type))) {
+      switch (type) {
+        case PHT_JOB:
+          name = "dromozoa.prl.api.job";
+          break;
+        case PHT_SERVER:
+          name = "dromozoa.prl.api.server";
+          break;
+        default:
+          name = "dromozoa.prl.api.handle";
+          break;
+      }
+    }
+
+    lua_pushlightuserdata(L, result);
+    luaL_getmetatable(L, name);
+    lua_setmetatable(L, -2);
+
+    return 1;
   }
 
   inline int open_sdk_wrap(lua_State* L) {
@@ -158,10 +176,7 @@ namespace dromozoa {
       }
     });
 
-    luaL_newmetatable(L, "dromozoa.prl.api.handle");
-    lua_pushvalue(L, -2);
-    lua_setfield(L, -2, "__index");
-    lua_pop(L, 1);
+    save_metatable_index(L, "dromozoa.prl.api.handle");
 
     return 1;
   }
@@ -180,11 +195,7 @@ namespace dromozoa {
       }
     });
 
-    luaL_newmetatable(L, "dromozoa.prl.api.job");
-    lua_pushvalue(L, -2);
-    lua_setfield(L, -2, "__index");
-    lua_pop(L, 1);
-
+    save_metatable_index(L, "dromozoa.prl.api.job");
     luaL_getmetatable(L, "dromozoa.prl.api.handle");
     lua_setmetatable(L, -2);
 
@@ -226,6 +237,10 @@ namespace dromozoa {
         return result_handle(L, handle);
       }
     });
+
+    save_metatable_index(L, "dromozoa.prl.api.server");
+    luaL_getmetatable(L, "dromozoa.prl.api.handle");
+    lua_setmetatable(L, -2);
 
     return 1;
   }
