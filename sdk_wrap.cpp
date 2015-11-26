@@ -6,9 +6,6 @@ extern "C" {
 
 #include <SdkWrap.h>
 
-#include <string>
-#include <iostream>
-
 namespace dromozoa {
   inline void set_field(lua_State* L, const char* key, lua_CFunction value) {
     lua_pushcfunction(L, value);

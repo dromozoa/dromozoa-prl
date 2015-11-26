@@ -6,12 +6,15 @@ CXXFLAGS = -std=c++11 $(CFLAGS)
 LDFLAGS = -L$(LUA_LIBDIR) $(LIBFLAG)
 LDLIBS = -ldl
 
-TARGET = sdk_wrap.so
+TARGET = api.so sdk_wrap.so
 
 all: $(TARGET)
 
 clean:
 	rm -f *.o $(TARGET)
+
+api.so: api.o SdkWrap.o
+	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 sdk_wrap.so: sdk_wrap.o SdkWrap.o
 	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $@
@@ -24,4 +27,4 @@ SdkWrap.o: $(PRL_SDKWRAPDIR)/SdkWrap.cpp
 
 install:
 	mkdir -p "$(LIBDIR)/dromozoa/prl"
-	cp sdk_wrap.so "$(LIBDIR)/dromozoa/prl"
+	cp $(TARGET) "$(LIBDIR)/dromozoa/prl"
