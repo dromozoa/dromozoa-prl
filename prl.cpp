@@ -210,7 +210,7 @@ namespace dromozoa {
     lua_newtable(L);
 
     set_field(L, "free", [](lua_State* L) {
-      int result = PrlHandle_Free(get_handle(L, 1));
+      PRL_RESULT result = PrlHandle_Free(get_handle(L, 1));
       if (PRL_SUCCEEDED(result)) {
         set_handle(L, 1, PRL_INVALID_HANDLE);
       }
@@ -274,12 +274,11 @@ namespace dromozoa {
       PRL_RESULT result = PrlResult_GetParamsCount(
           get_handle(L, 1),
           &count);
-      if (PRL_FAILED(result)) {
-        return result_error(L, result);
-      } else {
+      if (PRL_SUCCEEDED(result)) {
         lua_pushinteger(L, count);
         return 1;
       }
+      return ret(L, result);
     });
 
     save_metatable_index(L, "dromozoa.prl.api.result");
@@ -294,18 +293,11 @@ namespace dromozoa {
 
     set_field(L, "create", [](lua_State* L) {
       PRL_HANDLE handle = PRL_INVALID_HANDLE;
-      PRL_RESULT result = PrlSrv_Create(&handle);
-      if (PRL_FAILED(result)) {
-        return result_error(L, "could not PrlSrv_Create", result);
-      } else {
-        return result_handle(L, handle);
-      }
+      return ret(L, PrlSrv_Create(&handle), &handle);
     });
 
     set_field(L, "get_vm_list", [](lua_State* L) {
-      return ret(L,
-          PrlSrv_GetVmList(
-              get_handle(L, 1)));
+      return ret(L, PrlSrv_GetVmList(get_handle(L, 1)));
     });
 
     set_field(L, "login_local", [](lua_State* L) {
@@ -318,9 +310,7 @@ namespace dromozoa {
     });
 
     set_field(L, "logoff", [](lua_State* L) {
-      return ret(L,
-          PrlSrv_Logoff(
-              get_handle(L, 1)));
+      return ret(L, PrlSrv_Logoff( get_handle(L, 1)));
     });
 
     save_metatable_index(L, "dromozoa.prl.api.server");
@@ -334,9 +324,7 @@ namespace dromozoa {
     lua_newtable(L);
 
     set_field(L, "init", [](lua_State* L) {
-      return ret(L,
-          PrlApi_Init(
-              luaL_optinteger(L, 1, PARALLELS_API_VER)));
+      return ret(L, PrlApi_Init(luaL_optinteger(L, 1, PARALLELS_API_VER)));
     });
 
     set_field(L, "init_ex", [](lua_State* L) {
