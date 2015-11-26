@@ -29,7 +29,7 @@ extern "C" {
 #include <limits>
 #include <iostream>
 
-#define DROMOZOA_SET_FIELD(value) \
+#define DROMOZOA_SET_FIELD(L, value) \
   dromozoa::set_field(L, #value, (value))
 
 namespace dromozoa {
@@ -43,8 +43,22 @@ namespace dromozoa {
     lua_setfield(L, -2, key);
   }
 
-  inline PRL_HANDLE check_handle(lua_State* L, int n) {
-    return *static_cast<PRL_HANDLE*>(lua_touserdata(L, n));
+  inline PRL_HANDLE get_handle(lua_State* L, int n) {
+    PRL_HANDLE* data = static_cast<PRL_HANDLE*>(lua_touserdata(L, n));
+    if (!data) {
+      luaL_argerror(L, n, "userdata expected, got nil");
+      return PRL_INVALID_HANDLE;
+    }
+    return *data;
+  }
+
+  inline void set_handle(lua_State* L, int n, PRL_HANDLE handle) {
+    PRL_HANDLE* data = static_cast<PRL_HANDLE*>(lua_touserdata(L, n));
+    if (!data) {
+      luaL_argerror(L, n, "userdata expected, got nil");
+      return;
+    }
+    *data = handle;
   }
 
   inline void save_metatable_index(lua_State* L, const char* name) {
@@ -54,24 +68,6 @@ namespace dromozoa {
     lua_pushstring(L, name);
     lua_setfield(L, -2, "name");
     lua_pop(L, 1);
-  }
-
-  inline int result_boolean(lua_State* L, bool result) {
-    lua_pushboolean(L, result);
-    return 1;
-  }
-
-  inline int result_true(lua_State* L) {
-    return result_boolean(L, true);
-  }
-
-  inline int result_false(lua_State* L) {
-    return result_boolean(L, true);
-  }
-
-  inline int result_string(lua_State* L, const char* result) {
-    lua_pushstring(L, result);
-    return 1;
   }
 
   inline int result_error(lua_State* L, const char* message, int result) {
@@ -192,18 +188,19 @@ namespace dromozoa {
               lua_toboolean(L, 2)));
     });
 
+    set_field(L, "load_lib_from_std_paths", [](lua_State* L) {
+      return ret(L,
+          SdkWrap_LoadLibFromStdPaths(
+              lua_toboolean(L, 1)));
+    });
+
     set_field(L, "unload", [](lua_State* L) {
       return ret(L, SdkWrap_Unload());
     });
 
     set_field(L, "is_loaded", [](lua_State* L) {
-      return result_boolean(L, SdkWrap_IsLoaded());
-    });
-
-    set_field(L, "load_lib_from_std_paths", [](lua_State* L) {
-      return ret(L,
-          SdkWrap_LoadLibFromStdPaths(
-              lua_toboolean(L, 1)));
+      lua_pushboolean(L, SdkWrap_IsLoaded());
+      return 1;
     });
 
     return 1;
@@ -213,16 +210,18 @@ namespace dromozoa {
     lua_newtable(L);
 
     set_field(L, "free", [](lua_State* L) {
-      return ret(L,
-          PrlHandle_Free(
-              check_handle(L, 1)));
+      int result = PrlHandle_Free(get_handle(L, 1));
+      if (PRL_SUCCEEDED(result)) {
+        set_handle(L, 1, PRL_INVALID_HANDLE);
+      }
+      return ret(L, result);
     });
 
     set_field(L, "get_type", [](lua_State* L) {
       PRL_HANDLE_TYPE type = PHT_ERROR;
       return ret(L,
           PrlHandle_GetType(
-              check_handle(L, 1),
+              get_handle(L, 1),
               &type),
           &type);
     });
@@ -238,7 +237,7 @@ namespace dromozoa {
     set_field(L, "wait", [](lua_State* L) {
       return ret(L,
           PrlJob_Wait(
-              check_handle(L, 1),
+              get_handle(L, 1),
               luaL_optinteger(L, 2, std::numeric_limits<std::uint32_t>::max())));
     });
 
@@ -246,7 +245,7 @@ namespace dromozoa {
       PRL_HANDLE handle = PRL_INVALID_HANDLE;
       return ret(L,
           PrlJob_GetResult(
-              check_handle(L, 1),
+              get_handle(L, 1),
               &handle),
           &handle);
     });
@@ -255,7 +254,7 @@ namespace dromozoa {
       PRL_RESULT code = PRL_ERR_SUCCESS;
       return ret(L,
           PrlJob_GetRetCode(
-              check_handle(L, 1),
+              get_handle(L, 1),
               &code),
           &code);
     });
@@ -273,7 +272,7 @@ namespace dromozoa {
     set_field(L, "get_params_count", [](lua_State* L) {
       PRL_UINT32 count = 0;
       PRL_RESULT result = PrlResult_GetParamsCount(
-          check_handle(L, 1),
+          get_handle(L, 1),
           &count);
       if (PRL_FAILED(result)) {
         return result_error(L, result);
@@ -306,13 +305,13 @@ namespace dromozoa {
     set_field(L, "get_vm_list", [](lua_State* L) {
       return ret(L,
           PrlSrv_GetVmList(
-              check_handle(L, 1)));
+              get_handle(L, 1)));
     });
 
     set_field(L, "login_local", [](lua_State* L) {
       return ret(L,
           PrlSrv_LoginLocal(
-              check_handle(L, 1),
+              get_handle(L, 1),
               lua_tostring(L, 2),
               luaL_optinteger(L, 3, 0),
               static_cast<PRL_SECURITY_LEVEL>(luaL_optinteger(L, 4, PSL_NORMAL_SECURITY))));
@@ -321,7 +320,7 @@ namespace dromozoa {
     set_field(L, "logoff", [](lua_State* L) {
       return ret(L,
           PrlSrv_Logoff(
-              check_handle(L, 1)));
+              get_handle(L, 1)));
     });
 
     save_metatable_index(L, "dromozoa.prl.api.server");
@@ -368,28 +367,28 @@ namespace dromozoa {
     set_field(L, "API_VER", PARALLELS_API_VER);
 
     // PRL_APPLICATION_MODE
-    DROMOZOA_SET_FIELD(PAM_UNKNOWN);
-    DROMOZOA_SET_FIELD(PAM_SERVER);
-    DROMOZOA_SET_FIELD(PAM_DESKTOP_MAC);
-    DROMOZOA_SET_FIELD(PAM_WORKSTATION_EXTREME);
-    DROMOZOA_SET_FIELD(PAM_PLAYER);
-    DROMOZOA_SET_FIELD(PAM_DESKTOP_STM);
-    DROMOZOA_SET_FIELD(PAM_DESKTOP_WL);
-    DROMOZOA_SET_FIELD(PAM_MOBILE);
-    DROMOZOA_SET_FIELD(PAM_DESKTOP_STM_OBSOLETE);
-    DROMOZOA_SET_FIELD(PAM_DESKTOP);
-    DROMOZOA_SET_FIELD(PAM_WORKSTATION);
-    DROMOZOA_SET_FIELD(PAM_STM);
+    DROMOZOA_SET_FIELD(L, PAM_UNKNOWN);
+    DROMOZOA_SET_FIELD(L, PAM_SERVER);
+    DROMOZOA_SET_FIELD(L, PAM_DESKTOP_MAC);
+    DROMOZOA_SET_FIELD(L, PAM_WORKSTATION_EXTREME);
+    DROMOZOA_SET_FIELD(L, PAM_PLAYER);
+    DROMOZOA_SET_FIELD(L, PAM_DESKTOP_STM);
+    DROMOZOA_SET_FIELD(L, PAM_DESKTOP_WL);
+    DROMOZOA_SET_FIELD(L, PAM_MOBILE);
+    DROMOZOA_SET_FIELD(L, PAM_DESKTOP_STM_OBSOLETE);
+    DROMOZOA_SET_FIELD(L, PAM_DESKTOP);
+    DROMOZOA_SET_FIELD(L, PAM_WORKSTATION);
+    DROMOZOA_SET_FIELD(L, PAM_STM);
 
     // PRL_API_INIT_FLAGS
-    DROMOZOA_SET_FIELD(PAIF_USE_GRAPHIC_MODE);
-    DROMOZOA_SET_FIELD(PAIF_INIT_AS_APPSTORE_CLIENT);
+    DROMOZOA_SET_FIELD(L, PAIF_USE_GRAPHIC_MODE);
+    DROMOZOA_SET_FIELD(L, PAIF_INIT_AS_APPSTORE_CLIENT);
 
     // PRL_API_COMMAND_FLAGS
-    DROMOZOA_SET_FIELD(PACF_NORMAL_SECURITY);
-    DROMOZOA_SET_FIELD(PACF_HIGH_SECURITY);
-    DROMOZOA_SET_FIELD(PACF_NON_INTERACTIVE_MODE);
-    DROMOZOA_SET_FIELD(PACF_CANCEL_TASK_ON_END_SESSION);
+    DROMOZOA_SET_FIELD(L, PACF_NORMAL_SECURITY);
+    DROMOZOA_SET_FIELD(L, PACF_HIGH_SECURITY);
+    DROMOZOA_SET_FIELD(L, PACF_NON_INTERACTIVE_MODE);
+    DROMOZOA_SET_FIELD(L, PACF_CANCEL_TASK_ON_END_SESSION);
 
     return 1;
   }
