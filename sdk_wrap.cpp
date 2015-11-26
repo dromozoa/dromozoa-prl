@@ -34,14 +34,9 @@ namespace {
       return 1;
     }
   }
-
-  int impl_test(lua_State* L) {
-    std::cerr << "TEST" << std::endl;
-    return 0;
-  }
 }
 
-extern "C" int luaopen_dromozoa_prl_sdk(lua_State* L) {
+extern "C" int luaopen_dromozoa_prl_sdk_wrap(lua_State* L) {
   lua_newtable(L);
   lua_pushcfunction(L, impl_load);
   lua_setfield(L, -2, "load");
