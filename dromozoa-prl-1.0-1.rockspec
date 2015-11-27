@@ -17,6 +17,7 @@ build = {
     LIBFLAG = "$(LIBFLAG)";
     LUA_INCDIR = "$(LUA_INCDIR)";
     LUA_LIBDIR = "$(LUA_LIBDIR)";
+    LUA = "$(LUA)";
   };
   install_variables = {
     BINDIR = "$(BINDIR)";

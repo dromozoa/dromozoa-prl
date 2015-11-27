@@ -25,12 +25,12 @@ extern "C" {
 
 #include <SdkWrap.h>
 
-#include <cstddef>
-#include <limits>
-#include <iostream>
+#include <errno.h>
+#include <string.h>
+#include <time.h>
 
-#define DROMOZOA_SET_FIELD(value) \
-  dromozoa::set_field(L, #value, (value))
+#include <limits>
+#include <vector>
 
 namespace dromozoa {
   inline void set_field(lua_State* L, const char* key, lua_Integer value) {
@@ -38,129 +38,148 @@ namespace dromozoa {
     lua_setfield(L, -2, key);
   }
 
-  inline PRL_HANDLE check_handle(lua_State* L, int n) {
-    return *static_cast<PRL_HANDLE*>(lua_touserdata(L, n));
-  }
-
-  inline void save_metatable_index(lua_State* L, const char* name) {
-    luaL_newmetatable(L, name);
-    lua_pushvalue(L, -2);
-    lua_setfield(L, -2, "__index");
-    lua_pushstring(L, name);
-    lua_setfield(L, -2, "name");
-    lua_pop(L, 1);
-  }
-
   inline void set_field(lua_State* L, const char* key, lua_CFunction value) {
     lua_pushcfunction(L, value);
     lua_setfield(L, -2, key);
   }
 
-  inline int result_boolean(lua_State* L, bool result) {
-    lua_pushboolean(L, result);
-    return 1;
+  template <class T>
+  inline T opt_enum(lua_State* L, int n, T d) {
+    return static_cast<T>(luaL_optinteger(L, n, d));
   }
 
-  inline int result_true(lua_State* L) {
-    return result_boolean(L, true);
+  inline PRL_HANDLE get_handle(lua_State* L, int n) {
+    PRL_HANDLE* data = static_cast<PRL_HANDLE*>(lua_touserdata(L, n));
+    if (!data) {
+      luaL_argerror(L, n, "userdata expected, got nil");
+      return PRL_INVALID_HANDLE;
+    }
+    return *data;
   }
 
-  inline int result_false(lua_State* L) {
-    return result_boolean(L, true);
+  inline void set_handle(lua_State* L, int n, PRL_HANDLE handle) {
+    PRL_HANDLE* data = static_cast<PRL_HANDLE*>(lua_touserdata(L, n));
+    if (!data) {
+      luaL_argerror(L, n, "userdata expected, got nil");
+      return;
+    }
+    *data = handle;
   }
 
-  inline int result_string(lua_State* L, const char* result) {
-    lua_pushstring(L, result);
-    return 1;
-  }
-
-  inline int result_error(lua_State* L, const char* message, int result) {
-    const char* reason = 0;
+  inline int ret_error(lua_State* L, PRL_RESULT result) {
+    const char* message = "error";
     if (PrlDbg_PrlResultToString) {
-      PrlDbg_PrlResultToString(result, &reason);
+      PrlDbg_PrlResultToString(result, &message);
     }
     lua_pushnil(L);
-    if (reason) {
-      lua_pushfstring(L, "%s: %s", message, reason);
-    } else {
-      lua_pushfstring(L, "%s: %d", message, result);
-    }
-    return 2;
+    lua_pushstring(L, message);
+    lua_pushinteger(L, result);
+    return 3;
   }
 
-  inline int result_handle(lua_State* L, PRL_HANDLE result) {
-
-    std::cerr << "handle: " << result << "\n";
-
-    if (result == PRL_INVALID_HANDLE) {
-      return 0;
-    }
-
-    const char* name = 0;
-
-    PRL_HANDLE_TYPE type = PHT_ERROR;
-    if (!PRL_FAILED(PrlHandle_GetType(result, &type))) {
+  inline int ret_handle(lua_State* L, PRL_HANDLE handle) {
+    const char* name = "dromozoa.prl.api.handle";
+    PRL_HANDLE_TYPE type;
+    if (PRL_SUCCEEDED(PrlHandle_GetType(handle, &type))) {
       switch (type) {
         case PHT_JOB:
           name = "dromozoa.prl.api.job";
           break;
+        case PHT_RESULT:
+          name = "dromozoa.prl.api.result";
+          break;
         case PHT_SERVER:
           name = "dromozoa.prl.api.server";
           break;
+        case PHT_VIRTUAL_MACHINE:
+          name = "dromozoa.prl.api.virtual_machine";
+          break;
         default:
-          name = "dromozoa.prl.api.handle";
           break;
       }
     }
-
-    std::cerr << lua_gettop(L) << std::endl;
-
-    void* data = lua_newuserdata(L, sizeof(PRL_HANDLE));
-    *static_cast<PRL_HANDLE*>(data) = result;
-    // lua_pushlightuserdata(L, result);
+    PRL_HANDLE* data = static_cast<PRL_HANDLE*>(lua_newuserdata(L, sizeof(PRL_HANDLE)));
+    *data = handle;
     luaL_getmetatable(L, name);
     lua_setmetatable(L, -2);
-
-    std::cerr << lua_gettop(L) << std::endl;
-
     return 1;
+  }
+
+  inline int ret(lua_State* L, PRL_RESULT result) {
+    if (PRL_FAILED(result)) {
+      return ret_error(L, result);
+    } else {
+      lua_pushboolean(L, true);
+      return 1;
+    }
+  }
+
+  inline int ret(lua_State* L, PRL_HANDLE result) {
+    if (result == PRL_INVALID_HANDLE) {
+      return ret_error(L, PRL_ERR_INVALID_HANDLE);
+    } else {
+      return ret_handle(L, result);
+    }
+  }
+
+  inline int ret(lua_State* L, PRL_RESULT result, const PRL_RESULT* code) {
+    if (PRL_FAILED(result)) {
+      return ret_error(L, result);
+    } else {
+      lua_pushstring(L, prl_result_to_string(*code));
+      lua_pushinteger(L, *code);
+      return 2;
+    }
+  }
+
+  inline int ret(lua_State* L, PRL_RESULT result, const PRL_HANDLE* handle) {
+    if (PRL_FAILED(result)) {
+      return ret_error(L, result);
+    } else {
+      return ret_handle(L, *handle);
+    }
+  }
+
+  inline int ret(lua_State* L, PRL_RESULT result, const PRL_HANDLE_TYPE* type) {
+    if (PRL_FAILED(result)) {
+      return ret_error(L, result);
+    } else {
+      lua_pushstring(L, handle_type_to_string(*type));
+      lua_pushinteger(L, *type);
+      return 2;
+    }
+  }
+
+  inline void prototype(lua_State* L, const char* name) {
+    luaL_newmetatable(L, name);
+    lua_pushvalue(L, -2);
+    lua_setfield(L, -2, "__index");
+    lua_pop(L, 1);
+  }
+
+  inline void inherit(lua_State* L, const char* name) {
+    luaL_getmetatable(L, name);
+    lua_setmetatable(L, -2);
   }
 
   inline int open_sdk_wrap(lua_State* L) {
     lua_newtable(L);
 
-    set_field(L, "load", [](lua_State* L) {
-      PRL_RESULT result = SdkWrap_Load(
-          luaL_checkstring(L, 1),
-          lua_toboolean(L, 2));
-      if (PRL_FAILED(result)) {
-        return result_error(L, "could not SdkWrap_Load", result);
-      } else {
-        return result_true(L);
-      }
-    });
-
-    set_field(L, "unload", [](lua_State* L) {
-      PRL_RESULT result = SdkWrap_Unload();
-      if (PRL_FAILED(result)) {
-        return result_error(L, "could not SdkWrap_Unload", result);
-      } else {
-        return result_true(L);
-      }
-    });
-
     set_field(L, "is_loaded", [](lua_State* L) {
-      return result_boolean(L, SdkWrap_IsLoaded());
+      lua_pushboolean(L, SdkWrap_IsLoaded());
+      return 1;
+    });
+
+    set_field(L, "load", [](lua_State* L) {
+      return ret(L, SdkWrap_Load(luaL_checkstring(L, 1), lua_toboolean(L, 2)));
     });
 
     set_field(L, "load_lib_from_std_paths", [](lua_State* L) {
-      PRL_BOOL result = SdkWrap_LoadLibFromStdPaths(
-          lua_toboolean(L, 1));
-      if (PRL_FAILED(result)) {
-        return result_error(L, "could not SdkWrap_LoadLibFromStdPaths", result);
-      } else {
-        return result_true(L);
-      }
+      return ret(L, SdkWrap_LoadLibFromStdPaths(lua_toboolean(L, 1)));
+    });
+
+    set_field(L, "unload", [](lua_State* L) {
+      return ret(L, SdkWrap_Unload());
     });
 
     return 1;
@@ -170,28 +189,19 @@ namespace dromozoa {
     lua_newtable(L);
 
     set_field(L, "free", [](lua_State* L) {
-      PRL_RESULT result = PrlHandle_Free(
-          check_handle(L, 1));
-      if (PRL_FAILED(result)) {
-        return result_error(L, "could not PrlHandle_Free", result);
-      } else {
-        return result_true(L);
+      PRL_RESULT result = PrlHandle_Free(get_handle(L, 1));
+      if (PRL_SUCCEEDED(result)) {
+        set_handle(L, 1, PRL_INVALID_HANDLE);
       }
+      return ret(L, result);
     });
 
     set_field(L, "get_type", [](lua_State* L) {
       PRL_HANDLE_TYPE type = PHT_ERROR;
-      PRL_RESULT result = PrlHandle_GetType(
-          check_handle(L, 1),
-          &type);
-      if (PRL_FAILED(result)) {
-        return result_error(L, "could not PrlHandle_GetType", result);
-      } else {
-        return result_string(L, handle_type_to_string(type));
-      }
+      return ret(L, PrlHandle_GetType(get_handle(L, 1), &type), &type);
     });
 
-    save_metatable_index(L, "dromozoa.prl.api.handle");
+    prototype(L, "dromozoa.prl.api.handle");
 
     return 1;
   }
@@ -199,46 +209,25 @@ namespace dromozoa {
   inline int open_api_job(lua_State* L) {
     lua_newtable(L);
 
-    set_field(L, "wait", [](lua_State* L) {
-      PRL_RESULT result = PrlJob_Wait(
-          check_handle(L, 1),
-          luaL_optinteger(L, 2, std::numeric_limits<std::uint32_t>::max()));
-      if (PRL_FAILED(result)) {
-        return result_error(L, "could not PrlJob_Wait", result);
-      } else {
-        return result_true(L);
-      }
-    });
-
     set_field(L, "get_result", [](lua_State* L) {
       PRL_HANDLE handle = PRL_INVALID_HANDLE;
-      PRL_RESULT result = PrlJob_GetResult(
-          check_handle(L, 1),
-          &handle);
-      if (PRL_FAILED(result)) {
-        return result_error(L, "could not PrlJob_GetResult", result);
-      } else {
-        return result_handle(L, handle);
-      }
+      return ret(L, PrlJob_GetResult(get_handle(L, 1), &handle), &handle);
     });
 
     set_field(L, "get_ret_code", [](lua_State* L) {
       PRL_RESULT code = PRL_ERR_SUCCESS;
-      PRL_RESULT result = PrlJob_GetRetCode(
-          check_handle(L, 1),
-          &code);
-      if (PRL_FAILED(result)) {
-        return result_error(L, "could not PrlJob_GetRetCode", result);
-      } else {
-        lua_pushstring(L, prl_result_to_string(code));
-        lua_pushinteger(L, code);
-        return 2;
-      }
+      return ret(L, PrlJob_GetRetCode(get_handle(L, 1), &code), &code);
     });
 
-    save_metatable_index(L, "dromozoa.prl.api.job");
-    luaL_getmetatable(L, "dromozoa.prl.api.handle");
-    lua_setmetatable(L, -2);
+    set_field(L, "wait", [](lua_State* L) {
+      return ret(L,
+          PrlJob_Wait(
+              get_handle(L, 1),
+              luaL_optinteger(L, 2, std::numeric_limits<PRL_UINT32>::max())));
+    });
+
+    prototype(L, "dromozoa.prl.api.job");
+    inherit(L, "dromozoa.prl.api.handle");
 
     return 1;
   }
@@ -246,22 +235,28 @@ namespace dromozoa {
   inline int open_api_result(lua_State* L) {
     lua_newtable(L);
 
+    set_field(L, "get_param_by_index", [](lua_State* L) {
+      PRL_HANDLE handle = PRL_INVALID_HANDLE;
+      return ret(L,
+          PrlResult_GetParamByIndex(
+              get_handle(L, 1),
+              luaL_checkinteger(L, 2),
+              &handle),
+          &handle);
+    });
+
     set_field(L, "get_params_count", [](lua_State* L) {
       PRL_UINT32 count = 0;
-      PRL_RESULT result = PrlResult_GetParamsCount(
-          check_handle(L, 1),
-          &count);
-      if (PRL_FAILED(result)) {
-        return result_error(L, "could not PrlResult_GetParamsCount", result);
-      } else {
+      PRL_RESULT result = PrlResult_GetParamsCount(get_handle(L, 1), &count);
+      if (PRL_SUCCEEDED(result)) {
         lua_pushinteger(L, count);
         return 1;
       }
+      return ret(L, result);
     });
 
-    save_metatable_index(L, "dromozoa.prl.api.result");
-    luaL_getmetatable(L, "dromozoa.prl.api.handle");
-    lua_setmetatable(L, -2);
+    prototype(L, "dromozoa.prl.api.result");
+    inherit(L, "dromozoa.prl.api.handle");
 
     return 1;
   }
@@ -271,87 +266,116 @@ namespace dromozoa {
 
     set_field(L, "create", [](lua_State* L) {
       PRL_HANDLE handle = PRL_INVALID_HANDLE;
-      PRL_RESULT result = PrlSrv_Create(&handle);
-      if (PRL_FAILED(result)) {
-        return result_error(L, "could not PrlSrv_Create", result);
-      } else {
-        return result_handle(L, handle);
-      }
+      return ret(L, PrlSrv_Create(&handle), &handle);
     });
 
     set_field(L, "get_vm_list", [](lua_State* L) {
-      PRL_HANDLE handle = PrlSrv_GetVmList(
-          check_handle(L, 1));
-      if (handle == PRL_INVALID_HANDLE) {
-        return result_error(L, "could not PrlSrv_GetVmList", PRL_ERR_INVALID_HANDLE);
-      } else {
-        return result_handle(L, handle);
-      }
+      return ret(L, PrlSrv_GetVmList(get_handle(L, 1)));
     });
 
     set_field(L, "login_local", [](lua_State* L) {
-      PRL_HANDLE handle = PrlSrv_LoginLocal(
-          check_handle(L, 1),
-          lua_tostring(L, 2),
-          luaL_optinteger(L, 3, 0),
-          static_cast<PRL_SECURITY_LEVEL>(luaL_optinteger(L, 4, PSL_NORMAL_SECURITY)));
-      if (handle == PRL_INVALID_HANDLE) {
-        return result_error(L, "could not PrlSrv_LoginLocal", PRL_ERR_INVALID_HANDLE);
-      } else {
-        return result_handle(L, handle);
-      }
+      return ret(L,
+          PrlSrv_LoginLocal(
+              get_handle(L, 1),
+              lua_tostring(L, 2),
+              luaL_optinteger(L, 3, 0),
+              opt_enum(L, 4, PSL_NORMAL_SECURITY)));
     });
 
     set_field(L, "logoff", [](lua_State* L) {
-      PRL_HANDLE handle = PrlSrv_Logoff(
-          check_handle(L, 1));
-      if (handle == PRL_INVALID_HANDLE) {
-        return result_error(L, "could not PrlSrv_Logoff", PRL_ERR_INVALID_HANDLE);
-      } else {
-        return result_handle(L, handle);
-      }
+      return ret(L, PrlSrv_Logoff(get_handle(L, 1)));
     });
 
-    save_metatable_index(L, "dromozoa.prl.api.server");
-    luaL_getmetatable(L, "dromozoa.prl.api.handle");
-    lua_setmetatable(L, -2);
+    prototype(L, "dromozoa.prl.api.server");
+    inherit(L, "dromozoa.prl.api.handle");
 
+    return 1;
+  }
+
+  inline int open_api_vm_configuration(lua_State* L) {
+    lua_newtable(L);
+
+    set_field(L, "get_name", [](lua_State* L) {
+      PRL_HANDLE handle = get_handle(L, 1);
+      PRL_UINT32 size = 0;
+      PRL_RESULT result = PrlVmCfg_GetName(handle, 0, &size);
+      if (PRL_SUCCEEDED(result)) {
+        std::vector<char> buffer(size);
+        result = PrlVmCfg_GetName(handle, buffer.data(), &size);
+        if (PRL_SUCCEEDED(result)) {
+          lua_pushstring(L, buffer.data());
+          return 1;
+        }
+      }
+      return ret(L, result);
+    });
+
+    prototype(L, "dromozoa.prl.api.vm_configuration");
+    inherit(L, "dromozoa.prl.api.handle");
+
+    return 1;
+  }
+
+  inline int open_api_virtual_machine(lua_State* L) {
+    lua_newtable(L);
+
+    set_field(L, "connect_to_vm", [](lua_State* L) {
+      return ret(L,
+          PrlDevDisplay_ConnectToVm(
+              get_handle(L, 1),
+              opt_enum(L, 2, PDCT_HIGH_QUALITY_WITHOUT_COMPRESSION)));
+    });
+
+    set_field(L, "disconnect_from_vm", [](lua_State* L) {
+      return ret(L, PrlDevDisplay_DisconnectFromVm( get_handle(L, 1)));
+    });
+
+    set_field(L, "get_config", [](lua_State* L) {
+      PRL_HANDLE handle = PRL_INVALID_HANDLE;
+      return ret(L, PrlVm_GetConfig(get_handle(L, 1), &handle), &handle);
+    });
+
+    set_field(L, "send_key_event_ex", [](lua_State* L) {
+      return ret(L,
+          PrlDevKeyboard_SendKeyEventEx(
+              get_handle(L, 1),
+              static_cast<PRL_KEY>(luaL_checkinteger(L, 2)),
+              static_cast<PRL_KEY_EVENT>(luaL_checkinteger(L, 3))));
+    });
+
+    set_field(L, "send_key_pressed_and_released", [](lua_State* L) {
+      return ret(L,
+          PrlDevKeyboard_SendKeyPressedAndReleased(
+              get_handle(L, 1),
+              static_cast<PRL_KEY>(luaL_checkinteger(L, 2))));
+    });
+
+    prototype(L, "dromozoa.prl.api.virtual_machine");
+    inherit(L, "dromozoa.prl.api.vm_configuration");
+
+    return 1;
+  }
+
+  inline int open_api_key(lua_State* L) {
+    lua_newtable(L);
+#include "key.hpp"
     return 1;
   }
 
   inline int open_api(lua_State* L) {
     lua_newtable(L);
 
-    set_field(L, "init", [](lua_State* L) {
-      PRL_RESULT result = PrlApi_Init(
-          luaL_optinteger(L, 1, PARALLELS_API_VER));
-      if (PRL_FAILED(result)) {
-        return result_error(L, "could not PrlApi_Init", result);
-      } else {
-        return result_true(L);
-      }
+    set_field(L, "deinit", [](lua_State* L) {
+      return ret(L, PrlApi_Deinit());
     });
 
     set_field(L, "init_ex", [](lua_State* L) {
-      PRL_RESULT result = PrlApi_InitEx(
-          luaL_optinteger(L, 1, PARALLELS_API_VER),
-          static_cast<PRL_APPLICATION_MODE>(luaL_optinteger(L, 2, PAM_DESKTOP)),
-          luaL_optinteger(L, 3, 0),
-          luaL_optinteger(L, 4, 0));
-      if (PRL_FAILED(result)) {
-        return result_error(L, "could not PrlApi_InitEx", result);
-      } else {
-        return result_true(L);
-      }
-    });
-
-    set_field(L, "deinit", [](lua_State* L) {
-      PRL_RESULT result = PrlApi_Deinit();
-      if (PRL_FAILED(result)) {
-        return result_error(L, "could not PrlApi_Deinit", result);
-      } else {
-        return result_true(L);
-      }
+      return ret(L,
+          PrlApi_InitEx(
+              luaL_optinteger(L, 1, PARALLELS_API_VER),
+              opt_enum(L, 2, PAM_DESKTOP),
+              luaL_optinteger(L, 3, 0),
+              luaL_optinteger(L, 4, 0)));
     });
 
     open_api_handle(L);
@@ -366,43 +390,96 @@ namespace dromozoa {
     open_api_server(L);
     lua_setfield(L, -2, "server");
 
+    open_api_vm_configuration(L);
+    lua_setfield(L, -2, "vm_configuration");
+
+    open_api_virtual_machine(L);
+    lua_setfield(L, -2, "virtual_machine");
+
+    open_api_key(L);
+    lua_setfield(L, -2, "key");
+
     set_field(L, "API_VER", PARALLELS_API_VER);
 
-    // PRL_APPLICATION_MODE
-    DROMOZOA_SET_FIELD(PAM_UNKNOWN);
-    DROMOZOA_SET_FIELD(PAM_SERVER);
-    DROMOZOA_SET_FIELD(PAM_DESKTOP_MAC);
-    DROMOZOA_SET_FIELD(PAM_WORKSTATION_EXTREME);
-    DROMOZOA_SET_FIELD(PAM_PLAYER);
-    DROMOZOA_SET_FIELD(PAM_DESKTOP_STM);
-    DROMOZOA_SET_FIELD(PAM_DESKTOP_WL);
-    DROMOZOA_SET_FIELD(PAM_MOBILE);
-    DROMOZOA_SET_FIELD(PAM_DESKTOP_STM_OBSOLETE);
-    DROMOZOA_SET_FIELD(PAM_DESKTOP);
-    DROMOZOA_SET_FIELD(PAM_WORKSTATION);
-    DROMOZOA_SET_FIELD(PAM_STM);
-
-    // PRL_API_INIT_FLAGS
-    DROMOZOA_SET_FIELD(PAIF_USE_GRAPHIC_MODE);
-    DROMOZOA_SET_FIELD(PAIF_INIT_AS_APPSTORE_CLIENT);
+#define DROMOZOA_SET_FIELD(L, value) \
+  dromozoa::set_field(L, #value, (value))
 
     // PRL_API_COMMAND_FLAGS
-    DROMOZOA_SET_FIELD(PACF_NORMAL_SECURITY);
-    DROMOZOA_SET_FIELD(PACF_HIGH_SECURITY);
-    DROMOZOA_SET_FIELD(PACF_NON_INTERACTIVE_MODE);
-    DROMOZOA_SET_FIELD(PACF_CANCEL_TASK_ON_END_SESSION);
+    DROMOZOA_SET_FIELD(L, PACF_NORMAL_SECURITY);
+    DROMOZOA_SET_FIELD(L, PACF_HIGH_SECURITY);
+    DROMOZOA_SET_FIELD(L, PACF_NON_INTERACTIVE_MODE);
+    DROMOZOA_SET_FIELD(L, PACF_CANCEL_TASK_ON_END_SESSION);
+
+    // PRL_API_INIT_FLAGS
+    DROMOZOA_SET_FIELD(L, PAIF_USE_GRAPHIC_MODE);
+    DROMOZOA_SET_FIELD(L, PAIF_INIT_AS_APPSTORE_CLIENT);
+
+    // PRL_APPLICATION_MODE
+    DROMOZOA_SET_FIELD(L, PAM_UNKNOWN);
+    DROMOZOA_SET_FIELD(L, PAM_SERVER);
+    DROMOZOA_SET_FIELD(L, PAM_DESKTOP_MAC);
+    DROMOZOA_SET_FIELD(L, PAM_WORKSTATION_EXTREME);
+    DROMOZOA_SET_FIELD(L, PAM_PLAYER);
+    DROMOZOA_SET_FIELD(L, PAM_DESKTOP_STM);
+    DROMOZOA_SET_FIELD(L, PAM_DESKTOP_WL);
+    DROMOZOA_SET_FIELD(L, PAM_MOBILE);
+    DROMOZOA_SET_FIELD(L, PAM_DESKTOP_STM_OBSOLETE);
+    DROMOZOA_SET_FIELD(L, PAM_DESKTOP);
+    DROMOZOA_SET_FIELD(L, PAM_WORKSTATION);
+    DROMOZOA_SET_FIELD(L, PAM_STM);
+
+    // PRL_DISPLAY_CODEC_TYPE
+    DROMOZOA_SET_FIELD(L, PDCT_HIGH_QUALITY_WITHOUT_COMPRESSION);
+    DROMOZOA_SET_FIELD(L, PDCT_HIGH_QUALITY_WITH_COMPRESSION);
+    DROMOZOA_SET_FIELD(L, PDCT_MEDIUM_QUALITY_WITHOUT_COMPRESSION);
+    DROMOZOA_SET_FIELD(L, PDCT_MEDIUM_QUALITY_WITH_COMPRESSION);
+    DROMOZOA_SET_FIELD(L, PDCT_LOW_QUALITY_WITHOUT_COMPRESSION);
+    DROMOZOA_SET_FIELD(L, PDCT_LOW_QUALITY_WITH_COMPRESSION);
+
+    // PRL_KEY_EVENT
+    DROMOZOA_SET_FIELD(L, PKE_PRESS);
+    DROMOZOA_SET_FIELD(L, PKE_RELEASE);
+
+#undef DROMOZOA_SET_FIELD
 
     return 1;
   }
 }
 
-#undef DROMOZOA_SET_ENUM
-
 extern "C" int luaopen_dromozoa_prl(lua_State* L) {
   lua_newtable(L);
+
   dromozoa::open_sdk_wrap(L);
   lua_setfield(L, -2, "sdk_wrap");
+
   dromozoa::open_api(L);
   lua_setfield(L, -2, "api");
+
+  dromozoa::set_field(L, "nanosleep", [](lua_State* L) {
+    struct timespec tv1 = {};
+    struct timespec tv2 = {};
+
+    lua_getfield(L, 1, "tv_sec");
+    tv1.tv_sec = luaL_checkinteger(L, -1);
+    lua_pop(L, 1);
+    lua_getfield(L, 1, "tv_nsec");
+    tv1.tv_nsec = luaL_optinteger(L, -1, 0);
+    lua_pop(L, 1);
+
+    if (nanosleep(&tv1, &tv2) != -1) {
+      lua_pushboolean(L, true);
+      return 1;
+    } else {
+      int code = errno;
+      lua_pushnil(L);
+      lua_pushstring(L, strerror(code));
+      lua_pushinteger(L, code);
+      lua_newtable(L);
+      dromozoa::set_field(L, "tv_sec", tv2.tv_sec);
+      dromozoa::set_field(L, "tv_nsec", tv2.tv_nsec);
+      return 4;
+    }
+  });
+
   return 1;
 }
