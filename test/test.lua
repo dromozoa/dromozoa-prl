@@ -16,6 +16,7 @@
 -- along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
 local prl = require "dromozoa.prl"
+local name, key = ...
 
 assert(not prl.sdk_wrap.is_loaded())
 assert(prl.sdk_wrap.load_lib_from_std_paths())
@@ -44,15 +45,23 @@ for i = 0, vm_list:get_params_count() - 1 do
   local vm_config = vm:get_config()
   assert(vm_config:get_type() == "PHT_VIRTUAL_MACHINE")
 
-  local name = vm_config:get_name()
-  print(string.format("%q", name))
+  print(string.format("%q", vm_config:get_name()))
+  if vm_config:get_name() == name then
+    local job = assert(vm:connect_to_vm())
+    assert(job:wait())
+    assert(job:get_ret_code() == "PRL_ERR_SUCCESS")
 
-  if name == "ulrika" then
-    -- print("starting vnc...")
-    -- local job = assert(vm:start_vnc_server())
-    -- assert(job:wait())
-    -- print(job:get_ret_code())
-    -- assert(job:free())
+    local press = prl.api.PKE_PRESS
+    local release = prl.api.PKE_RELEASE
+    local key = prl.api.key
+    vm:send_key_pressed_and_released(key.F)
+    prl.nanosleep({ tv_sec = 0, tv_nsec = 200000000 })
+    vm:send_key_pressed_and_released(key.O)
+    prl.nanosleep({ tv_sec = 0, tv_nsec = 200000000 })
+    vm:send_key_pressed_and_released(key.O)
+    prl.nanosleep({ tv_sec = 0, tv_nsec = 200000000 })
+
+    assert(vm:disconnect_from_vm())
   end
 
   assert(vm_config:free())
@@ -72,6 +81,3 @@ assert(server:free())
 assert(prl.api.deinit())
 assert(prl.sdk_wrap.unload())
 assert(not prl.sdk_wrap.is_loaded())
-
-print(prl.api.key["0"])
-print(prl.api.key.A)

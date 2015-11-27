@@ -25,6 +25,10 @@ extern "C" {
 
 #include <SdkWrap.h>
 
+#include <errno.h>
+#include <string.h>
+#include <time.h>
+
 #include <limits>
 #include <vector>
 
@@ -299,7 +303,7 @@ namespace dromozoa {
         std::vector<char> buffer(size);
         result = PrlVmCfg_GetName(handle, buffer.data(), &size);
         if (PRL_SUCCEEDED(result)) {
-          lua_pushlstring(L, buffer.data(), size - 1);
+          lua_pushstring(L, buffer.data());
           return 1;
         }
       }
@@ -314,6 +318,17 @@ namespace dromozoa {
 
   inline int open_api_virtual_machine(lua_State* L) {
     lua_newtable(L);
+
+    set_field(L, "connect_to_vm", [](lua_State* L) {
+      return ret(L,
+          PrlDevDisplay_ConnectToVm(
+              get_handle(L, 1),
+              opt_enum(L, 2, PDCT_HIGH_QUALITY_WITHOUT_COMPRESSION)));
+    });
+
+    set_field(L, "disconnect_from_vm", [](lua_State* L) {
+      return ret(L, PrlDevDisplay_DisconnectFromVm( get_handle(L, 1)));
+    });
 
     set_field(L, "get_config", [](lua_State* L) {
       PRL_HANDLE handle = PRL_INVALID_HANDLE;
@@ -389,6 +404,16 @@ namespace dromozoa {
 #define DROMOZOA_SET_FIELD(L, value) \
   dromozoa::set_field(L, #value, (value))
 
+    // PRL_API_COMMAND_FLAGS
+    DROMOZOA_SET_FIELD(L, PACF_NORMAL_SECURITY);
+    DROMOZOA_SET_FIELD(L, PACF_HIGH_SECURITY);
+    DROMOZOA_SET_FIELD(L, PACF_NON_INTERACTIVE_MODE);
+    DROMOZOA_SET_FIELD(L, PACF_CANCEL_TASK_ON_END_SESSION);
+
+    // PRL_API_INIT_FLAGS
+    DROMOZOA_SET_FIELD(L, PAIF_USE_GRAPHIC_MODE);
+    DROMOZOA_SET_FIELD(L, PAIF_INIT_AS_APPSTORE_CLIENT);
+
     // PRL_APPLICATION_MODE
     DROMOZOA_SET_FIELD(L, PAM_UNKNOWN);
     DROMOZOA_SET_FIELD(L, PAM_SERVER);
@@ -403,15 +428,13 @@ namespace dromozoa {
     DROMOZOA_SET_FIELD(L, PAM_WORKSTATION);
     DROMOZOA_SET_FIELD(L, PAM_STM);
 
-    // PRL_API_INIT_FLAGS
-    DROMOZOA_SET_FIELD(L, PAIF_USE_GRAPHIC_MODE);
-    DROMOZOA_SET_FIELD(L, PAIF_INIT_AS_APPSTORE_CLIENT);
-
-    // PRL_API_COMMAND_FLAGS
-    DROMOZOA_SET_FIELD(L, PACF_NORMAL_SECURITY);
-    DROMOZOA_SET_FIELD(L, PACF_HIGH_SECURITY);
-    DROMOZOA_SET_FIELD(L, PACF_NON_INTERACTIVE_MODE);
-    DROMOZOA_SET_FIELD(L, PACF_CANCEL_TASK_ON_END_SESSION);
+    // PRL_DISPLAY_CODEC_TYPE
+    DROMOZOA_SET_FIELD(L, PDCT_HIGH_QUALITY_WITHOUT_COMPRESSION);
+    DROMOZOA_SET_FIELD(L, PDCT_HIGH_QUALITY_WITH_COMPRESSION);
+    DROMOZOA_SET_FIELD(L, PDCT_MEDIUM_QUALITY_WITHOUT_COMPRESSION);
+    DROMOZOA_SET_FIELD(L, PDCT_MEDIUM_QUALITY_WITH_COMPRESSION);
+    DROMOZOA_SET_FIELD(L, PDCT_LOW_QUALITY_WITHOUT_COMPRESSION);
+    DROMOZOA_SET_FIELD(L, PDCT_LOW_QUALITY_WITH_COMPRESSION);
 
     // PRL_KEY_EVENT
     DROMOZOA_SET_FIELD(L, PKE_PRESS);
@@ -428,8 +451,35 @@ extern "C" int luaopen_dromozoa_prl(lua_State* L) {
 
   dromozoa::open_sdk_wrap(L);
   lua_setfield(L, -2, "sdk_wrap");
+
   dromozoa::open_api(L);
   lua_setfield(L, -2, "api");
+
+  dromozoa::set_field(L, "nanosleep", [](lua_State* L) {
+    struct timespec tv1 = {};
+    struct timespec tv2 = {};
+
+    lua_getfield(L, 1, "tv_sec");
+    tv1.tv_sec = luaL_checkinteger(L, -1);
+    lua_pop(L, 1);
+    lua_getfield(L, 1, "tv_nsec");
+    tv1.tv_nsec = luaL_optinteger(L, -1, 0);
+    lua_pop(L, 1);
+
+    if (nanosleep(&tv1, &tv2) != -1) {
+      lua_pushboolean(L, true);
+      return 1;
+    } else {
+      int code = errno;
+      lua_pushnil(L);
+      lua_pushstring(L, strerror(code));
+      lua_pushinteger(L, code);
+      lua_newtable(L);
+      dromozoa::set_field(L, "tv_sec", tv2.tv_sec);
+      dromozoa::set_field(L, "tv_nsec", tv2.tv_nsec);
+      return 4;
+    }
+  });
 
   return 1;
 }
