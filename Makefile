@@ -20,11 +20,11 @@ key.hpp: $(PRL_SDKDIR)/Headers/PrlKeys.h
 	$(LUA) generate_key.lua <$< >$@
 
 prl.o: prl.cpp key.hpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 SdkWrap.o: $(PRL_SDKWRAPDIR)/SdkWrap.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 install:
-	mkdir -p "$(LIBDIR)/dromozoa"
-	cp $(TARGET) "$(LIBDIR)/dromozoa"
+	mkdir -p $(LIBDIR)/dromozoa
+	cp $(TARGET) $(LIBDIR)/dromozoa
