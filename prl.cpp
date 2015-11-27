@@ -114,7 +114,11 @@ namespace dromozoa {
     if (PRL_FAILED(result)) {
       return ret_error(L, result);
     } else {
-      lua_pushboolean(L, true);
+      if (lua_isuserdata(L, 1)) {
+        lua_pushvalue(L, 1);
+      } else {
+        lua_pushboolean(L, true);
+      }
       return 1;
     }
   }
