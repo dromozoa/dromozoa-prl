@@ -44,6 +44,11 @@ namespace dromozoa {
   }
 
   template <class T>
+  inline T get_enum(lua_State* L, int n) {
+    return static_cast<T>(luaL_checkinteger(L, n));
+  }
+
+  template <class T>
   inline T opt_enum(lua_State* L, int n, T d) {
     return static_cast<T>(luaL_optinteger(L, n, d));
   }
@@ -339,15 +344,15 @@ namespace dromozoa {
       return ret(L,
           PrlDevKeyboard_SendKeyEventEx(
               get_handle(L, 1),
-              static_cast<PRL_KEY>(luaL_checkinteger(L, 2)),
-              static_cast<PRL_KEY_EVENT>(luaL_checkinteger(L, 3))));
+              get_enum<PRL_KEY>(L, 2),
+              get_enum<PRL_KEY_EVENT>(L, 3)));
     });
 
     set_field(L, "send_key_pressed_and_released", [](lua_State* L) {
       return ret(L,
           PrlDevKeyboard_SendKeyPressedAndReleased(
               get_handle(L, 1),
-              static_cast<PRL_KEY>(luaL_checkinteger(L, 2))));
+              get_enum<PRL_KEY>(L, 2)));
     });
 
     prototype(L, "dromozoa.prl.api.virtual_machine");
@@ -463,7 +468,7 @@ extern "C" int luaopen_dromozoa_prl(lua_State* L) {
     tv1.tv_sec = luaL_checkinteger(L, -1);
     lua_pop(L, 1);
     lua_getfield(L, 1, "tv_nsec");
-    tv1.tv_nsec = luaL_optinteger(L, -1, 0);
+    tv1.tv_nsec = luaL_checkinteger(L, -1);
     lua_pop(L, 1);
 
     if (nanosleep(&tv1, &tv2) != -1) {
