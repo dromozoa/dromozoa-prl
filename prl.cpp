@@ -194,7 +194,7 @@ namespace dromozoa {
     return 1;
   }
 
-  inline int open_api_handle(lua_State* L) {
+  inline int open_handle(lua_State* L) {
     lua_newtable(L);
 
     set_field(L, "free", [](lua_State* L) {
@@ -215,7 +215,7 @@ namespace dromozoa {
     return 1;
   }
 
-  inline int open_api_handle_job(lua_State* L) {
+  inline int open_handle_job(lua_State* L) {
     lua_newtable(L);
 
     set_field(L, "get_result", [](lua_State* L) {
@@ -241,7 +241,7 @@ namespace dromozoa {
     return 1;
   }
 
-  inline int open_api_handle_result(lua_State* L) {
+  inline int open_handle_result(lua_State* L) {
     lua_newtable(L);
 
     set_field(L, "get_param_by_index", [](lua_State* L) {
@@ -270,7 +270,7 @@ namespace dromozoa {
     return 1;
   }
 
-  inline int open_api_handle_server(lua_State* L) {
+  inline int open_handle_server(lua_State* L) {
     lua_newtable(L);
 
     set_field(L, "create", [](lua_State* L) {
@@ -301,7 +301,7 @@ namespace dromozoa {
     return 1;
   }
 
-  inline int open_api_handle_vm_configuration(lua_State* L) {
+  inline int open_handle_vm_configuration(lua_State* L) {
     lua_newtable(L);
 
     set_field(L, "get_name", [](lua_State* L) {
@@ -325,7 +325,7 @@ namespace dromozoa {
     return 1;
   }
 
-  inline int open_api_handle_virtual_machine(lua_State* L) {
+  inline int open_handle_virtual_machine(lua_State* L) {
     lua_newtable(L);
 
     set_field(L, "connect_to_vm", [](lua_State* L) {
@@ -365,13 +365,13 @@ namespace dromozoa {
     return 1;
   }
 
-  inline int open_api_key(lua_State* L) {
+  inline int open_key(lua_State* L) {
     lua_newtable(L);
 #include "key.hpp"
     return 1;
   }
 
-  inline void open_api(lua_State* L) {
+  inline void initialize_core(lua_State* L) {
     set_field(L, "deinit", [](lua_State* L) {
       return ret(L, PrlApi_Deinit());
     });
@@ -385,27 +385,29 @@ namespace dromozoa {
               luaL_optinteger(L, 4, 0)));
     });
 
-    open_api_handle(L);
+    open_handle(L);
     lua_setfield(L, -2, "handle");
 
-    open_api_handle_job(L);
+    open_handle_job(L);
     lua_setfield(L, -2, "job");
 
-    open_api_handle_result(L);
+    open_handle_result(L);
     lua_setfield(L, -2, "result");
 
-    open_api_handle_server(L);
+    open_handle_server(L);
     lua_setfield(L, -2, "server");
 
-    open_api_handle_vm_configuration(L);
+    open_handle_vm_configuration(L);
     lua_setfield(L, -2, "vm_configuration");
 
-    open_api_handle_virtual_machine(L);
+    open_handle_virtual_machine(L);
     lua_setfield(L, -2, "virtual_machine");
 
-    open_api_key(L);
+    open_key(L);
     lua_setfield(L, -2, "key");
+  }
 
+  inline void initialize_enum(lua_State* L) {
     set_field(L, "API_VER", PARALLELS_API_VER);
 
 #define DROMOZOA_SET_FIELD(L, value) \
@@ -450,7 +452,7 @@ namespace dromozoa {
 #undef DROMOZOA_SET_FIELD
   }
 
-  inline void open_nanosleep(lua_State* L) {
+  inline void initialize_unix(lua_State* L) {
     dromozoa::set_field(L, "nanosleep", [](lua_State* L) {
       struct timespec tv1 = {};
       struct timespec tv2 = {};
@@ -485,8 +487,9 @@ extern "C" int luaopen_dromozoa_prl(lua_State* L) {
   dromozoa::open_sdk_wrap(L);
   lua_setfield(L, -2, "sdk_wrap");
 
-  dromozoa::open_api(L);
-  dromozoa::open_nanosleep(L);
+  dromozoa::initialize_core(L);
+  dromozoa::initialize_enum(L);
+  dromozoa::initialize_unix(L);
 
   return 1;
 }
