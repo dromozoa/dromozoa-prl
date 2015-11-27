@@ -18,9 +18,9 @@
 local prl = require "dromozoa.prl"
 
 assert(prl.sdk_wrap.load("libprl_sdk.dylib"))
-assert(prl.api.init_ex())
+assert(prl.init_ex())
 
-local server = assert(prl.api.server.create())
+local server = assert(prl.server.create())
 server:login_local():wait():free()
 
 local vm_list = server:get_vm_list():wait():get_result()
@@ -28,5 +28,5 @@ print(vm_list:get_params_count())
 vm_list:free()
 server:free()
 
-assert(prl.api.deinit())
+assert(prl.deinit())
 assert(prl.sdk_wrap.unload())

@@ -22,9 +22,9 @@ assert(not prl.sdk_wrap.is_loaded())
 assert(prl.sdk_wrap.load_lib_from_std_paths())
 assert(prl.sdk_wrap.is_loaded())
 
-assert(prl.api.init_ex())
+assert(prl.init_ex())
 
-local server = assert(prl.api.server.create())
+local server = assert(prl.server.create())
 assert(server:get_type() == "PHT_SERVER")
 
 local job = assert(server:login_local())
@@ -51,9 +51,9 @@ for i = 0, vm_list:get_params_count() - 1 do
     assert(job:wait())
     assert(job:get_ret_code() == "PRL_ERR_SUCCESS")
 
-    local press = prl.api.PKE_PRESS
-    local release = prl.api.PKE_RELEASE
-    local key = prl.api.key
+    local press = prl.PKE_PRESS
+    local release = prl.PKE_RELEASE
+    local key = prl.key
     vm:send_key_pressed_and_released(key.F)
     prl.nanosleep({ tv_sec = 0, tv_nsec = 200000000 })
     vm:send_key_pressed_and_released(key.O)
@@ -78,6 +78,6 @@ assert(job:free())
 
 assert(server:free())
 
-assert(prl.api.deinit())
+assert(prl.deinit())
 assert(prl.sdk_wrap.unload())
 assert(not prl.sdk_wrap.is_loaded())

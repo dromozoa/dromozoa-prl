@@ -83,21 +83,21 @@ namespace dromozoa {
   }
 
   inline int ret_handle(lua_State* L, PRL_HANDLE handle) {
-    const char* name = "dromozoa.prl.api.handle";
+    const char* name = "dromozoa.prl.handle";
     PRL_HANDLE_TYPE type;
     if (PRL_SUCCEEDED(PrlHandle_GetType(handle, &type))) {
       switch (type) {
         case PHT_JOB:
-          name = "dromozoa.prl.api.job";
+          name = "dromozoa.prl.job";
           break;
         case PHT_RESULT:
-          name = "dromozoa.prl.api.result";
+          name = "dromozoa.prl.result";
           break;
         case PHT_SERVER:
-          name = "dromozoa.prl.api.server";
+          name = "dromozoa.prl.server";
           break;
         case PHT_VIRTUAL_MACHINE:
-          name = "dromozoa.prl.api.virtual_machine";
+          name = "dromozoa.prl.virtual_machine";
           break;
         default:
           break;
@@ -210,7 +210,7 @@ namespace dromozoa {
       return ret(L, PrlHandle_GetType(get_handle(L, 1), &type), &type);
     });
 
-    prototype(L, "dromozoa.prl.api.handle");
+    prototype(L, "dromozoa.prl.handle");
 
     return 1;
   }
@@ -235,8 +235,8 @@ namespace dromozoa {
               luaL_optinteger(L, 2, std::numeric_limits<PRL_UINT32>::max())));
     });
 
-    prototype(L, "dromozoa.prl.api.job");
-    inherit(L, "dromozoa.prl.api.handle");
+    prototype(L, "dromozoa.prl.job");
+    inherit(L, "dromozoa.prl.handle");
 
     return 1;
   }
@@ -264,8 +264,8 @@ namespace dromozoa {
       return ret(L, result);
     });
 
-    prototype(L, "dromozoa.prl.api.result");
-    inherit(L, "dromozoa.prl.api.handle");
+    prototype(L, "dromozoa.prl.result");
+    inherit(L, "dromozoa.prl.handle");
 
     return 1;
   }
@@ -295,8 +295,8 @@ namespace dromozoa {
       return ret(L, PrlSrv_Logoff(get_handle(L, 1)));
     });
 
-    prototype(L, "dromozoa.prl.api.server");
-    inherit(L, "dromozoa.prl.api.handle");
+    prototype(L, "dromozoa.prl.server");
+    inherit(L, "dromozoa.prl.handle");
 
     return 1;
   }
@@ -319,8 +319,8 @@ namespace dromozoa {
       return ret(L, result);
     });
 
-    prototype(L, "dromozoa.prl.api.vm_configuration");
-    inherit(L, "dromozoa.prl.api.handle");
+    prototype(L, "dromozoa.prl.vm_configuration");
+    inherit(L, "dromozoa.prl.handle");
 
     return 1;
   }
@@ -359,8 +359,8 @@ namespace dromozoa {
               get_enum<PRL_KEY>(L, 2)));
     });
 
-    prototype(L, "dromozoa.prl.api.virtual_machine");
-    inherit(L, "dromozoa.prl.api.vm_configuration");
+    prototype(L, "dromozoa.prl.virtual_machine");
+    inherit(L, "dromozoa.prl.vm_configuration");
 
     return 1;
   }
@@ -371,9 +371,7 @@ namespace dromozoa {
     return 1;
   }
 
-  inline int open_api(lua_State* L) {
-    lua_newtable(L);
-
+  inline void open_api(lua_State* L) {
     set_field(L, "deinit", [](lua_State* L) {
       return ret(L, PrlApi_Deinit());
     });
@@ -450,8 +448,34 @@ namespace dromozoa {
     DROMOZOA_SET_FIELD(L, PKE_RELEASE);
 
 #undef DROMOZOA_SET_FIELD
+  }
 
-    return 1;
+  inline void open_nanosleep(lua_State* L) {
+    dromozoa::set_field(L, "nanosleep", [](lua_State* L) {
+      struct timespec tv1 = {};
+      struct timespec tv2 = {};
+
+      lua_getfield(L, 1, "tv_sec");
+      tv1.tv_sec = luaL_checkinteger(L, -1);
+      lua_pop(L, 1);
+      lua_getfield(L, 1, "tv_nsec");
+      tv1.tv_nsec = luaL_checkinteger(L, -1);
+      lua_pop(L, 1);
+
+      if (nanosleep(&tv1, &tv2) != -1) {
+        lua_pushboolean(L, true);
+        return 1;
+      } else {
+        int code = errno;
+        lua_pushnil(L);
+        lua_pushstring(L, strerror(code));
+        lua_pushinteger(L, code);
+        lua_newtable(L);
+        dromozoa::set_field(L, "tv_sec", tv2.tv_sec);
+        dromozoa::set_field(L, "tv_nsec", tv2.tv_nsec);
+        return 4;
+      }
+    });
   }
 }
 
@@ -462,33 +486,7 @@ extern "C" int luaopen_dromozoa_prl(lua_State* L) {
   lua_setfield(L, -2, "sdk_wrap");
 
   dromozoa::open_api(L);
-  lua_setfield(L, -2, "api");
-
-  dromozoa::set_field(L, "nanosleep", [](lua_State* L) {
-    struct timespec tv1 = {};
-    struct timespec tv2 = {};
-
-    lua_getfield(L, 1, "tv_sec");
-    tv1.tv_sec = luaL_checkinteger(L, -1);
-    lua_pop(L, 1);
-    lua_getfield(L, 1, "tv_nsec");
-    tv1.tv_nsec = luaL_checkinteger(L, -1);
-    lua_pop(L, 1);
-
-    if (nanosleep(&tv1, &tv2) != -1) {
-      lua_pushboolean(L, true);
-      return 1;
-    } else {
-      int code = errno;
-      lua_pushnil(L);
-      lua_pushstring(L, strerror(code));
-      lua_pushinteger(L, code);
-      lua_newtable(L);
-      dromozoa::set_field(L, "tv_sec", tv2.tv_sec);
-      dromozoa::set_field(L, "tv_nsec", tv2.tv_nsec);
-      return 4;
-    }
-  });
+  dromozoa::open_nanosleep(L);
 
   return 1;
 }
