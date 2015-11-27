@@ -26,6 +26,7 @@ extern "C" {
 #include <SdkWrap.h>
 
 #include <limits>
+#include <vector>
 
 namespace dromozoa {
   inline void set_field(lua_State* L, const char* key, lua_Integer value) {
@@ -85,6 +86,9 @@ namespace dromozoa {
           break;
         case PHT_SERVER:
           name = "dromozoa.prl.api.server";
+          break;
+        case PHT_VIRTUAL_MACHINE:
+          name = "dromozoa.prl.api.virtual_machine";
           break;
         default:
           break;
@@ -157,6 +161,11 @@ namespace dromozoa {
   inline int open_sdk_wrap(lua_State* L) {
     lua_newtable(L);
 
+    set_field(L, "is_loaded", [](lua_State* L) {
+      lua_pushboolean(L, SdkWrap_IsLoaded());
+      return 1;
+    });
+
     set_field(L, "load", [](lua_State* L) {
       return ret(L, SdkWrap_Load(luaL_checkstring(L, 1), lua_toboolean(L, 2)));
     });
@@ -167,11 +176,6 @@ namespace dromozoa {
 
     set_field(L, "unload", [](lua_State* L) {
       return ret(L, SdkWrap_Unload());
-    });
-
-    set_field(L, "is_loaded", [](lua_State* L) {
-      lua_pushboolean(L, SdkWrap_IsLoaded());
-      return 1;
     });
 
     return 1;
@@ -188,6 +192,11 @@ namespace dromozoa {
       return ret(L, result);
     });
 
+    set_field(L, "get_address", [](lua_State* L) {
+      lua_pushinteger(L, reinterpret_cast<lua_Integer>(get_handle(L, 1)));
+      return 1;
+    });
+
     set_field(L, "get_type", [](lua_State* L) {
       PRL_HANDLE_TYPE type = PHT_ERROR;
       return ret(L, PrlHandle_GetType(get_handle(L, 1), &type), &type);
@@ -201,13 +210,6 @@ namespace dromozoa {
   inline int open_api_job(lua_State* L) {
     lua_newtable(L);
 
-    set_field(L, "wait", [](lua_State* L) {
-      return ret(L,
-          PrlJob_Wait(
-              get_handle(L, 1),
-              luaL_optinteger(L, 2, std::numeric_limits<PRL_UINT32>::max())));
-    });
-
     set_field(L, "get_result", [](lua_State* L) {
       PRL_HANDLE handle = PRL_INVALID_HANDLE;
       return ret(L, PrlJob_GetResult(get_handle(L, 1), &handle), &handle);
@@ -218,6 +220,13 @@ namespace dromozoa {
       return ret(L, PrlJob_GetRetCode(get_handle(L, 1), &code), &code);
     });
 
+    set_field(L, "wait", [](lua_State* L) {
+      return ret(L,
+          PrlJob_Wait(
+              get_handle(L, 1),
+              luaL_optinteger(L, 2, std::numeric_limits<PRL_UINT32>::max())));
+    });
+
     prototype(L, "dromozoa.prl.api.job");
     inherit(L, "dromozoa.prl.api.handle");
 
@@ -226,6 +235,16 @@ namespace dromozoa {
 
   inline int open_api_result(lua_State* L) {
     lua_newtable(L);
+
+    set_field(L, "get_param_by_index", [](lua_State* L) {
+      PRL_HANDLE handle = PRL_INVALID_HANDLE;
+      return ret(L,
+          PrlResult_GetParamByIndex(
+              get_handle(L, 1),
+              luaL_checkinteger(L, 2),
+              &handle),
+          &handle);
+    });
 
     set_field(L, "get_params_count", [](lua_State* L) {
       PRL_UINT32 count = 0;
@@ -274,11 +293,49 @@ namespace dromozoa {
     return 1;
   }
 
+  inline int open_api_vm_configuration(lua_State* L) {
+    lua_newtable(L);
+
+    set_field(L, "get_name", [](lua_State* L) {
+      PRL_HANDLE handle = get_handle(L, 1);
+      PRL_UINT32 size = 0;
+      PRL_RESULT result = PrlVmCfg_GetName(handle, 0, &size);
+      if (PRL_SUCCEEDED(result)) {
+        std::vector<char> buffer(size);
+        result = PrlVmCfg_GetName(handle, buffer.data(), &size);
+        if (PRL_SUCCEEDED(result)) {
+          lua_pushlstring(L, buffer.data(), buffer.size());
+          return 1;
+        }
+      }
+      return ret(L, result);
+    });
+
+    prototype(L, "dromozoa.prl.api.vm_configuration");
+    inherit(L, "dromozoa.prl.api.handle");
+
+    return 1;
+  }
+
+  inline int open_api_virtual_machine(lua_State* L) {
+    lua_newtable(L);
+
+    set_field(L, "get_config", [](lua_State* L) {
+      PRL_HANDLE handle = PRL_INVALID_HANDLE;
+      return ret(L, PrlVm_GetConfig(get_handle(L, 1), &handle), &handle);
+    });
+
+    prototype(L, "dromozoa.prl.api.virtual_machine");
+    inherit(L, "dromozoa.prl.api.vm_configuration");
+
+    return 1;
+  }
+
   inline int open_api(lua_State* L) {
     lua_newtable(L);
 
-    set_field(L, "init", [](lua_State* L) {
-      return ret(L, PrlApi_Init(luaL_optinteger(L, 1, PARALLELS_API_VER)));
+    set_field(L, "deinit", [](lua_State* L) {
+      return ret(L, PrlApi_Deinit());
     });
 
     set_field(L, "init_ex", [](lua_State* L) {
@@ -288,10 +345,6 @@ namespace dromozoa {
               opt_enum(L, 2, PAM_DESKTOP),
               luaL_optinteger(L, 3, 0),
               luaL_optinteger(L, 4, 0)));
-    });
-
-    set_field(L, "deinit", [](lua_State* L) {
-      return ret(L, PrlApi_Deinit());
     });
 
     open_api_handle(L);
@@ -305,6 +358,12 @@ namespace dromozoa {
 
     open_api_server(L);
     lua_setfield(L, -2, "server");
+
+    open_api_vm_configuration(L);
+    lua_setfield(L, -2, "vm_configuration");
+
+    open_api_virtual_machine(L);
+    lua_setfield(L, -2, "virtual_machine");
 
     set_field(L, "API_VER", PARALLELS_API_VER);
 
