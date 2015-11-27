@@ -22,6 +22,8 @@ case x$1 in
   *) lua=$1;;
 esac
 
+prlctl list -a >/dev/null
+
 for i in test/test*.lua
 do
   "$lua" "$i"

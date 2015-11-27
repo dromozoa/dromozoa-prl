@@ -16,7 +16,6 @@
 -- along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
 local prl = require "dromozoa.prl"
-local name, key = ...
 
 assert(not prl.sdk_wrap.is_loaded())
 assert(prl.sdk_wrap.load_lib_from_std_paths())
@@ -44,26 +43,7 @@ for i = 0, vm_list:get_params_count() - 1 do
   assert(vm:get_type() == "PHT_VIRTUAL_MACHINE")
   local vm_config = vm:get_config()
   assert(vm_config:get_type() == "PHT_VIRTUAL_MACHINE")
-
   print(string.format("%q", vm_config:get_name()))
-  if vm_config:get_name() == name then
-    local job = assert(vm:connect_to_vm())
-    assert(job:wait())
-    assert(job:get_ret_code() == "PRL_ERR_SUCCESS")
-
-    local press = prl.PKE_PRESS
-    local release = prl.PKE_RELEASE
-    local key = prl.key
-    vm:send_key_pressed_and_released(key.F)
-    prl.nanosleep({ tv_sec = 0, tv_nsec = 200000000 })
-    vm:send_key_pressed_and_released(key.O)
-    prl.nanosleep({ tv_sec = 0, tv_nsec = 200000000 })
-    vm:send_key_pressed_and_released(key.O)
-    prl.nanosleep({ tv_sec = 0, tv_nsec = 200000000 })
-
-    assert(vm:disconnect_from_vm())
-  end
-
   assert(vm_config:free())
   assert(vm:free())
 end
