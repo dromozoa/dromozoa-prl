@@ -43,7 +43,18 @@ for i = 0, vm_list:get_params_count() - 1 do
   assert(vm:get_type() == "PHT_VIRTUAL_MACHINE")
   local vm_config = vm:get_config()
   assert(vm_config:get_type() == "PHT_VIRTUAL_MACHINE")
-  print(vm_config:get_name())
+
+  local name = vm_config:get_name()
+  print(string.format("%q", name))
+
+  if name == "ulrika" then
+    -- print("starting vnc...")
+    -- local job = assert(vm:start_vnc_server())
+    -- assert(job:wait())
+    -- print(job:get_ret_code())
+    -- assert(job:free())
+  end
+
   assert(vm_config:free())
   assert(vm:free())
 end
@@ -61,3 +72,6 @@ assert(server:free())
 assert(prl.api.deinit())
 assert(prl.sdk_wrap.unload())
 assert(not prl.sdk_wrap.is_loaded())
+
+print(prl.api.key["0"])
+print(prl.api.key.A)

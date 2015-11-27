@@ -279,7 +279,7 @@ namespace dromozoa {
     });
 
     set_field(L, "logoff", [](lua_State* L) {
-      return ret(L, PrlSrv_Logoff( get_handle(L, 1)));
+      return ret(L, PrlSrv_Logoff(get_handle(L, 1)));
     });
 
     prototype(L, "dromozoa.prl.api.server");
@@ -299,7 +299,7 @@ namespace dromozoa {
         std::vector<char> buffer(size);
         result = PrlVmCfg_GetName(handle, buffer.data(), &size);
         if (PRL_SUCCEEDED(result)) {
-          lua_pushlstring(L, buffer.data(), buffer.size());
+          lua_pushlstring(L, buffer.data(), size - 1);
           return 1;
         }
       }
@@ -320,9 +320,30 @@ namespace dromozoa {
       return ret(L, PrlVm_GetConfig(get_handle(L, 1), &handle), &handle);
     });
 
+    set_field(L, "send_key_event_ex", [](lua_State* L) {
+      return ret(L,
+          PrlDevKeyboard_SendKeyEventEx(
+              get_handle(L, 1),
+              static_cast<PRL_KEY>(luaL_checkinteger(L, 2)),
+              static_cast<PRL_KEY_EVENT>(luaL_checkinteger(L, 3))));
+    });
+
+    set_field(L, "send_key_pressed_and_released", [](lua_State* L) {
+      return ret(L,
+          PrlDevKeyboard_SendKeyPressedAndReleased(
+              get_handle(L, 1),
+              static_cast<PRL_KEY>(luaL_checkinteger(L, 2))));
+    });
+
     prototype(L, "dromozoa.prl.api.virtual_machine");
     inherit(L, "dromozoa.prl.api.vm_configuration");
 
+    return 1;
+  }
+
+  inline int open_api_key(lua_State* L) {
+    lua_newtable(L);
+#include "prl_key.hpp"
     return 1;
   }
 
@@ -360,6 +381,9 @@ namespace dromozoa {
     open_api_virtual_machine(L);
     lua_setfield(L, -2, "virtual_machine");
 
+    open_api_key(L);
+    lua_setfield(L, -2, "key");
+
     set_field(L, "API_VER", PARALLELS_API_VER);
 
 #define DROMOZOA_SET_FIELD(L, value) \
@@ -388,6 +412,10 @@ namespace dromozoa {
     DROMOZOA_SET_FIELD(L, PACF_HIGH_SECURITY);
     DROMOZOA_SET_FIELD(L, PACF_NON_INTERACTIVE_MODE);
     DROMOZOA_SET_FIELD(L, PACF_CANCEL_TASK_ON_END_SESSION);
+
+    // PRL_KEY_EVENT
+    DROMOZOA_SET_FIELD(L, PKE_PRESS);
+    DROMOZOA_SET_FIELD(L, PKE_RELEASE);
 
 #undef DROMOZOA_SET_FIELD
 
