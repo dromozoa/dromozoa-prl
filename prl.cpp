@@ -192,11 +192,6 @@ namespace dromozoa {
       return ret(L, result);
     });
 
-    set_field(L, "get_address", [](lua_State* L) {
-      lua_pushinteger(L, reinterpret_cast<lua_Integer>(get_handle(L, 1)));
-      return 1;
-    });
-
     set_field(L, "get_type", [](lua_State* L) {
       PRL_HANDLE_TYPE type = PHT_ERROR;
       return ret(L, PrlHandle_GetType(get_handle(L, 1), &type), &type);
