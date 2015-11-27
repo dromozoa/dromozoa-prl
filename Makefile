@@ -11,19 +11,19 @@ TARGET = prl.so
 all: $(TARGET)
 
 clean:
-	rm -f prl_key.hpp *.o $(TARGET)
+	rm -f key.hpp *.o $(TARGET)
 
 prl.so: prl.o SdkWrap.o
 	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-prl_key.hpp: $(PRL_SDKDIR)/Headers/PrlKeys.h
+key.hpp: $(PRL_SDKDIR)/Headers/PrlKeys.h
 	$(LUA) generate_key.lua <$< >$@
 
-prl.o: prl_key.hpp prl.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c prl.cpp
+prl.o: prl.cpp key.hpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 SdkWrap.o: $(PRL_SDKWRAPDIR)/SdkWrap.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 install:
 	mkdir -p "$(LIBDIR)/dromozoa"

@@ -358,7 +358,7 @@ namespace dromozoa {
 
   inline int open_api_key(lua_State* L) {
     lua_newtable(L);
-#include "prl_key.hpp"
+#include "key.hpp"
     return 1;
   }
 
