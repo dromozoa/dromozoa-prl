@@ -191,13 +191,13 @@ namespace dromozoa {
           if (PRL_SUCCEEDED(result)) {
             set_handle(L, 1, PRL_INVALID_HANDLE);
             if (gc_log_level > 1) {
-              std::cerr << "freed leaked handle " << address << std::endl;
+              std::cerr << "freed handle " << address << std::endl;
             }
           } else if (gc_log_level > 0) {
-            std::cerr << "could not free leaked handle: " << address << " (" << result_to_string(result) << ")" << std::endl;
+            std::cerr << "could not free handle: " << address << " (" << result_to_string(result) << ")" << std::endl;
           }
         } else if (gc_log_level > 0) {
-          std::cerr << "could not free leaked handle: " << address << " (PrlHandle_Free is not loaded)" << std::endl;
+          std::cerr << "could not free handle: " << address << " (PrlHandle_Free is not loaded)" << std::endl;
         }
       }
       return 0;
