@@ -1,0 +1,91 @@
+#! /usr/bin/env lua
+
+-- Copyright (C) 2015 Tomoyuki Fujimori <moyu@dromozoa.com>
+--
+-- This file is part of dromozoa-prl.
+--
+-- dromozoa-prl is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- dromozoa-prl is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
+
+local prl = require "dromozoa.prl"
+
+local name = ...
+
+local function sleep()
+  prl.nanosleep({ tv_sec = 0, tv_nsec = 200000000 })
+end
+
+local us101_shift = {
+  ["!"] = "1";
+  ["@"] = "2";
+  ["#"] = "3";
+  ["$"] = "4";
+  ["%"] = "5";
+  ["^"] = "6";
+  ["&"] = "7";
+  ["*"] = "8";
+  ["("] = "9";
+  [")"] = "0";
+  ["_"] = "MINUS";
+  ["+"] = "EQUAL";
+  ["{"] = "LEFT_BRACKET";
+  ["}"] = "RIGHT_BRACKET";
+  [":"] = "SEMICOLON";
+  ["\""] = "QUOTE";
+  ["~"] = "TILDA";
+}
+
+local us101 = {
+  ["-"] = "MINUS";
+  ["="] = "EQUAL";
+  ["["] = "LEFT_BRACKET";
+  ["]"] = "RIGHT_BRACKET";
+  ["["] = "LEFT_BRACKET";
+  ["]"] = "RIGHT_BRACKET";
+  [";"] = "SEMICOLON";
+  ["'"] = "QUOTE";
+  ["`"] = "TILDA";
+}
+
+prl.sdk_wrap.load_lib_from_std_paths()
+prl.init_ex()
+
+local server = prl.server.create()
+server:login_local():wait():free()
+
+local vm_list = server:get_vm_list():wait():get_result()
+for i = 0, vm_list:get_params_count() - 1 do
+  local vm = vm_list:get_param_by_index(i)
+  local vm_config = vm:get_config()
+  if vm_config:get_name() == name then
+    vm:connect_to_vm():wait():free()
+    sleep() vm:send_key_pressed_and_released(prl.key.BACKSLASH)
+    sleep() vm:send_key_pressed_and_released(prl.key.COMMA)
+    sleep() vm:send_key_pressed_and_released(prl.key.DOT)
+    sleep() vm:send_key_event_ex(prl.key.LEFT_SHIFT, prl.PKE_PRESS)
+    sleep() vm:send_key_pressed_and_released(prl.key.SEMICOLON)
+    sleep() vm:send_key_pressed_and_released(prl.key.QUOTE)
+    sleep() vm:send_key_pressed_and_released(prl.key.TILDA)
+    sleep() vm:send_key_event_ex(prl.key.LEFT_SHIFT, prl.PKE_RELEASE)
+    sleep() vm:disconnect_from_vm()
+  end
+  vm_config:free()
+  vm:free()
+end
+vm_list:free()
+
+server:logoff():wait():free()
+server:free()
+
+prl.deinit()
+prl.sdk_wrap.unload()

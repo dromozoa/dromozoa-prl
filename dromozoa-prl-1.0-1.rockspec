@@ -22,6 +22,5 @@ build = {
   install_variables = {
     BINDIR = "$(BINDIR)";
     LIBDIR = "$(LIBDIR)";
-    LUADIR = "$(LUADIR)";
   };
 }
