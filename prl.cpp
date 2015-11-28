@@ -235,6 +235,20 @@ namespace dromozoa {
               luaL_optinteger(L, 2, std::numeric_limits<PRL_UINT32>::max())));
     });
 
+    set_field(L, "check_ret_code", [](lua_State* L) {
+      PRL_RESULT code = PRL_ERR_SUCCESS;
+      PRL_RESULT result = PrlJob_GetRetCode(get_handle(L, 1), &code);
+      if (PRL_SUCCEEDED(result)) {
+        if (PRL_SUCCEEDED(code)) {
+          lua_pushvalue(L, 1);
+          return 1;
+        } else {
+          return luaL_error(L, "%s", prl_result_to_string(code));
+        }
+      }
+      return ret(L, result);
+    });
+
     prototype(L, "dromozoa.prl.job");
     inherit(L, "dromozoa.prl.handle");
 

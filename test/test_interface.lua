@@ -21,9 +21,9 @@ assert(prl.sdk_wrap.load("libprl_sdk.dylib"))
 assert(prl.init_ex())
 
 local server = assert(prl.server.create())
-server:login_local():wait():free()
+server:login_local():wait():check_ret_code():free()
 
-local vm_list = server:get_vm_list():wait():get_result()
+local vm_list = server:get_vm_list():wait():check_ret_code():get_result()
 print(vm_list:get_params_count())
 vm_list:free()
 server:free()
