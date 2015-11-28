@@ -30,9 +30,15 @@ extern "C" {
 #include <time.h>
 
 #include <limits>
+#include <sstream>
+#include <string>
 #include <vector>
 
+#include <iostream>
+
 namespace dromozoa {
+  lua_Integer gc_log_level = 0;
+
   inline void set_field(lua_State* L, const char* key, lua_Integer value) {
     lua_pushinteger(L, value);
     lua_setfield(L, -2, key);
@@ -62,6 +68,10 @@ namespace dromozoa {
     return *data;
   }
 
+  inline lua_Integer get_handle_address(PRL_HANDLE handle) {
+    return reinterpret_cast<lua_Integer>(handle);
+  }
+
   inline void set_handle(lua_State* L, int n, PRL_HANDLE handle) {
     PRL_HANDLE* data = static_cast<PRL_HANDLE*>(lua_touserdata(L, n));
     if (!data) {
@@ -71,13 +81,22 @@ namespace dromozoa {
     *data = handle;
   }
 
-  inline int ret_error(lua_State* L, PRL_RESULT result) {
-    const char* message = "error";
+  std::string result_to_string(PRL_RESULT result) {
+    const char* string = 0;
     if (PrlDbg_PrlResultToString) {
-      PrlDbg_PrlResultToString(result, &message);
+      PrlDbg_PrlResultToString(result, &string);
     }
+    if (string) {
+      return string;
+    }
+    std::ostringstream out;
+    out << "PRL_RESULT " << result << " (PrlDbg_PrlResultToString is not loaded)";
+    return out.str();
+  }
+
+  inline int ret_error(lua_State* L, PRL_RESULT result) {
     lua_pushnil(L);
-    lua_pushstring(L, message);
+    lua_pushstring(L, result_to_string(result).c_str());
     lua_pushinteger(L, result);
     return 3;
   }
@@ -135,7 +154,7 @@ namespace dromozoa {
     if (PRL_FAILED(result)) {
       return ret_error(L, result);
     } else {
-      lua_pushstring(L, prl_result_to_string(*code));
+      lua_pushstring(L, result_to_string(*code).c_str());
       lua_pushinteger(L, *code);
       return 2;
     }
@@ -163,6 +182,26 @@ namespace dromozoa {
     luaL_newmetatable(L, name);
     lua_pushvalue(L, -2);
     lua_setfield(L, -2, "__index");
+    set_field(L, "__gc", [](lua_State* L) {
+      PRL_HANDLE handle = get_handle(L, 1);
+      if (handle != PRL_INVALID_HANDLE) {
+        lua_Integer address = get_handle_address(handle);
+        if (PrlHandle_Free) {
+          PRL_RESULT result = PrlHandle_Free(handle);
+          if (PRL_SUCCEEDED(result)) {
+            set_handle(L, 1, PRL_INVALID_HANDLE);
+            if (gc_log_level > 1) {
+              std::cerr << "freed leaked handle " << address << std::endl;
+            }
+          } else if (gc_log_level > 0) {
+            std::cerr << "could not free leaked handle: " << address << " (" << result_to_string(result) << ")" << std::endl;
+          }
+        } else if (gc_log_level > 0) {
+          std::cerr << "could not free leaked handle: " << address << " (PrlHandle_Free is not loaded)" << std::endl;
+        }
+      }
+      return 0;
+    });
     lua_pop(L, 1);
   }
 
@@ -210,6 +249,11 @@ namespace dromozoa {
       return ret(L, PrlHandle_GetType(get_handle(L, 1), &type), &type);
     });
 
+    set_field(L, "get_address", [](lua_State* L) {
+      lua_pushinteger(L, get_handle_address(get_handle(L, 1)));
+      return 1;
+    });
+
     prototype(L, "dromozoa.prl.handle");
 
     return 1;
@@ -243,7 +287,7 @@ namespace dromozoa {
           lua_pushvalue(L, 1);
           return 1;
         } else {
-          return luaL_error(L, "%s", prl_result_to_string(code));
+          return luaL_error(L, "%s", result_to_string(code).c_str());
         }
       }
       return ret(L, result);
@@ -397,6 +441,16 @@ namespace dromozoa {
               opt_enum(L, 2, PAM_DESKTOP),
               luaL_optinteger(L, 3, 0),
               luaL_optinteger(L, 4, 0)));
+    });
+
+    set_field(L, "set_gc_log_level", [](lua_State* L) {
+      gc_log_level = luaL_checkinteger(L, 1);
+      return 0;
+    });
+
+    set_field(L, "get_gc_log_level", [](lua_State* L) {
+      lua_pushinteger(L, gc_log_level);
+      return 1;
     });
 
     open_handle(L);

@@ -43,6 +43,7 @@ for i = 0, vm_list:get_params_count() - 1 do
   assert(vm:get_type() == "PHT_VIRTUAL_MACHINE")
   local vm_config = vm:get_config()
   assert(vm_config:get_type() == "PHT_VIRTUAL_MACHINE")
+  assert(vm:get_address() == vm_config:get_address())
   print(string.format("%q", vm_config:get_name()))
   assert(vm_config:free())
   assert(vm:free())
