@@ -29,15 +29,16 @@ extern "C" {
 #include <string.h>
 #include <time.h>
 
+#include <iostream>
 #include <limits>
+#include <map>
 #include <sstream>
 #include <string>
 #include <vector>
 
-#include <iostream>
-
 namespace dromozoa {
   lua_Integer gc_log_level = 0;
+  std::map<PRL_HANDLE, int> handle_refs;
 
   inline void set_field(lua_State* L, const char* key, lua_Integer value) {
     lua_pushinteger(L, value);
@@ -83,7 +84,11 @@ namespace dromozoa {
 
   inline PRL_RESULT free_handle(PRL_HANDLE handle) {
     if (PrlHandle_Free) {
-      return PrlHandle_Free(handle);
+      PRL_RESULT result = PrlHandle_Free(handle);
+      if (PRL_SUCCEEDED(result)) {
+        --handle_refs[handle];
+      }
+      return result;
     } else {
       return PRL_ERR_UNINITIALIZED;
     }
@@ -138,6 +143,7 @@ namespace dromozoa {
     *data = handle;
     luaL_getmetatable(L, name);
     lua_setmetatable(L, -2);
+    ++handle_refs[handle];
     return 1;
   }
 
@@ -235,6 +241,9 @@ namespace dromozoa {
     });
 
     set_field(L, "unload", [](lua_State* L) {
+      // for (const auto& i : handle_refs) {
+      //   std::cerr << get_handle_address(i.first) << ": " << i.second << std::endl;
+      // }
       return ret(L, SdkWrap_Unload());
     });
 
@@ -306,7 +315,7 @@ namespace dromozoa {
       PRL_HANDLE handle = PRL_INVALID_HANDLE;
       PRL_RESULT result = PrlJob_GetResult(self, &handle);
       if (PRL_SUCCEEDED(result)) {
-        PRL_RESULT result = PrlHandle_Free(self);
+        PRL_RESULT result = free_handle(self);
         if (PRL_SUCCEEDED(result)) {
           set_handle(L, 1, PRL_INVALID_HANDLE);
           return ret(L, result, &handle);

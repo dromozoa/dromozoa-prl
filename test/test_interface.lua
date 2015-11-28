@@ -28,8 +28,8 @@ do
   server:login_local():wait():check_ret_code():free()
 
   local job = server:get_vm_list():wait():check_ret_code()
-  print(job:get_address())
-  local vm_list = job:get_result_and_free()
+  -- local vm_list = job:get_result_and_free()
+  local vm_list = job:get_result()
   -- job:free()
   print(vm_list:get_params_count())
   vm_list:free()
