@@ -17,8 +17,8 @@
 
 local prl = require "dromozoa.prl"
 
-assert(prl.get_gc_log_level() == 0)
-prl.set_gc_log_level(2)
+assert(prl.get_log_level() == 0)
+prl.set_log_level(3)
 
 assert(prl.sdk_wrap.load("libprl_sdk.dylib"))
 assert(prl.init_ex())
