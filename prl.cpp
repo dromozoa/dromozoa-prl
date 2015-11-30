@@ -325,7 +325,6 @@ namespace dromozoa {
           set_invalid_handle(L, 1);
           return ret(L, result, &handle);
         }
-        return luaL_error(L, "%s", result_to_str(result).c_str());
       }
       return luaL_error(L, "%s", result_to_str(result).c_str());
     });
