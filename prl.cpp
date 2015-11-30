@@ -31,14 +31,12 @@ extern "C" {
 
 #include <iostream>
 #include <limits>
-#include <map>
 #include <sstream>
 #include <string>
 #include <vector>
 
 namespace dromozoa {
   lua_Integer log_level = 0;
-  std::map<PRL_HANDLE, int> handle_count;
 
   inline void set_field(lua_State* L, const char* key, lua_Integer value) {
     lua_pushinteger(L, value);
@@ -89,12 +87,8 @@ namespace dromozoa {
 
       PRL_RESULT result = PrlHandle_Free(handle);
       if (PRL_SUCCEEDED(result)) {
-        --handle_count[handle];
         if (log_level > 2) {
-          std::cerr
-              << "[dromozoa-prl] free handle=" << get_handle_address(handle)
-              << " type=" << handle_type_to_string(type)
-              << " count=" << handle_count[handle] << std::endl;
+          std::cerr << "[dromozoa-prl] detached handle " << get_handle_address(handle) << " (" << handle_type_to_string(type) << ")" << std::endl;
         }
       }
       return result;
@@ -154,12 +148,8 @@ namespace dromozoa {
     luaL_getmetatable(L, name);
     lua_setmetatable(L, -2);
 
-    ++handle_count[handle];
     if (log_level > 2) {
-      std::cerr
-          << "[dromozoa-prl] new handle=" << get_handle_address(handle)
-          << " type=" << handle_type_to_string(type)
-          << " count=" << handle_count[handle] << std::endl;
+      std::cerr << "[dromozoa-prl] attached handle " << get_handle_address(handle) << " (" << handle_type_to_string(type) << ")" << std::endl;
     }
 
     return 1;
@@ -221,15 +211,15 @@ namespace dromozoa {
     set_field(L, "__gc", [](lua_State* L) {
       PRL_HANDLE handle = get_handle(L, 1);
       if (handle != PRL_INVALID_HANDLE) {
+        if (log_level > 1) {
+          std::cerr << "[dromozoa-prl] found handle " << get_handle_address(handle) << std::endl;
+        }
         lua_Integer address = get_handle_address(handle);
         PRL_RESULT result = free_handle(handle);
         if (PRL_SUCCEEDED(result)) {
           set_invalid_handle(L, 1);
-          if (log_level > 1) {
-            std::cerr << "freed handle " << address << std::endl;
-          }
         } else if (log_level > 0) {
-          std::cerr << "could not free handle " << address << ": " << result_to_str(result) << std::endl;
+          std::cerr << "[dromozoa-prl] could not free handle " << address << ": " << result_to_str(result) << std::endl;
         }
       }
       return 0;
@@ -259,9 +249,6 @@ namespace dromozoa {
     });
 
     set_field(L, "unload", [](lua_State* L) {
-      // for (const auto& i : handle_count) {
-      //   std::cerr << get_handle_address(i.first) << ": " << i.second << std::endl;
-      // }
       return ret(L, SdkWrap_Unload());
     });
 
