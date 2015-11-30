@@ -1,0 +1,135 @@
+#! /usr/bin/env lua
+
+-- Copyright (C) 2015 Tomoyuki Fujimori <moyu@dromozoa.com>
+--
+-- This file is part of dromozoa-prl.
+--
+-- dromozoa-prl is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- dromozoa-prl is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
+
+local prl = require "dromozoa.prl"
+
+local name = ...
+local text = io.read("*a")
+
+local function sleep()
+  prl.nanosleep({ tv_sec = 0, tv_nsec = 100000000 })
+end
+
+local key_to_char = {
+  ESCAPE = string.char(0x1B);
+  MINUS = "-";
+  EQUAL = "=";
+  BACKSPACE = "\b";
+  TAB = "\t";
+  LEFT_BRACKET = "[";
+  RIGHT_BRACKET = "]";
+  ENTER = "\n";
+  SEMICOLON = ";";
+  QUOTE = "'";
+  TILDA = "`";
+  BACKSLASH = "\\";
+  COMMA = ",";
+  DOT = ".";
+  SLASH = "/";
+  SPACE = " ";
+};
+
+local key_to_char_capital = {
+  ["1"] = "!";
+  ["2"] = "@";
+  ["3"] = "#";
+  ["4"] = "$";
+  ["5"] = "%";
+  ["6"] = "^";
+  ["7"] = "&";
+  ["8"] = "*";
+  ["9"] = "(";
+  ["0"] = ")";
+  MINUS = "_";
+  EQUAL = "+";
+  LEFT_BRACKET = "{";
+  RIGHT_BRACKET = "}";
+  SEMICOLON = ":";
+  QUOTE = "\"";
+  TILDA = "~";
+  BACKSLASH = "|";
+  COMMA = "<";
+  DOT = ">";
+  SLASH = "?";
+}
+
+local a, b = string.byte("09", 1, 2)
+for i = a, b do
+  local c = string.char(i)
+  key_to_char[c] = c
+end
+
+local a, b = string.byte("AZ", 1, 2)
+for i = a, b do
+  local c = string.char(i)
+  key_to_char[c] = c:lower()
+  key_to_char_capital[c] = c
+end
+
+local char_to_key = {}
+for key, char in pairs(key_to_char) do
+  char_to_key[char] = { key }
+end
+for key, char in pairs(key_to_char_capital) do
+  char_to_key[char] = { key, true }
+end
+
+prl.set_log_level(1)
+prl.sdk_wrap.load_lib_from_std_paths()
+prl.init_ex()
+
+do
+  local server = prl.server.create()
+  server:login_local():wait():check_ret_code():free()
+
+  local vm_list = server:get_vm_list():wait():get_result_and_free()
+  for i = 0, vm_list:get_params_count() - 1 do
+    local vm = vm_list:get_param_by_index(i)
+    local vm_config = vm:get_config()
+    if vm_config:get_name() == name then
+      vm:connect_to_vm():wait():check_ret_code():free()
+      for i = 1, #text do
+        local c = text:sub(i, i)
+        local keys = char_to_key[c]
+        local key, shift = keys[1], keys[2]
+        if shift then
+          vm:send_key_event_ex(prl.key.LEFT_SHIFT, prl.PKE_PRESS)
+          vm:send_key_pressed_and_released(prl.key[keys[1]])
+          vm:send_key_event_ex(prl.key.LEFT_SHIFT, prl.PKE_RELEASE)
+        else
+          vm:send_key_pressed_and_released(prl.key[keys[1]])
+        end
+        sleep()
+      end
+      vm:disconnect_from_vm()
+    end
+    vm_config:free()
+    vm:free()
+  end
+  vm_list:free()
+
+  server:logoff():wait():check_ret_code():free()
+  server:free()
+
+  collectgarbage()
+  collectgarbage()
+end
+
+prl.deinit()
+prl.sdk_wrap.unload()
