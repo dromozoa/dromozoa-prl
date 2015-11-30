@@ -88,7 +88,7 @@ namespace dromozoa {
       PRL_RESULT result = PrlHandle_Free(handle);
       if (PRL_SUCCEEDED(result)) {
         if (log_level > 2) {
-          std::cerr << "[dromozoa-prl] detached handle " << get_handle_address(handle) << " (" << handle_type_to_string(type) << ")" << std::endl;
+          std::cerr << "[dromozoa-prl] detach handle " << get_handle_address(handle) << " (" << handle_type_to_string(type) << ")" << std::endl;
         }
       }
       return result;
@@ -149,7 +149,7 @@ namespace dromozoa {
     lua_setmetatable(L, -2);
 
     if (log_level > 2) {
-      std::cerr << "[dromozoa-prl] attached handle " << get_handle_address(handle) << " (" << handle_type_to_string(type) << ")" << std::endl;
+      std::cerr << "[dromozoa-prl] attach handle " << get_handle_address(handle) << " (" << handle_type_to_string(type) << ")" << std::endl;
     }
 
     return 1;
@@ -211,15 +211,15 @@ namespace dromozoa {
     set_field(L, "__gc", [](lua_State* L) {
       PRL_HANDLE handle = get_handle(L, 1);
       if (handle != PRL_INVALID_HANDLE) {
-        if (log_level > 1) {
-          std::cerr << "[dromozoa-prl] found handle " << get_handle_address(handle) << std::endl;
-        }
         lua_Integer address = get_handle_address(handle);
+        if (log_level > 1) {
+          std::cerr << "[dromozoa-prl] handle " << address << " detected" << std::endl;
+        }
         PRL_RESULT result = free_handle(handle);
         if (PRL_SUCCEEDED(result)) {
           set_invalid_handle(L, 1);
         } else if (log_level > 0) {
-          std::cerr << "[dromozoa-prl] could not free handle " << address << ": " << result_to_str(result) << std::endl;
+          std::cerr << "[dromozoa-prl] cannot free handle " << address << ": " << result_to_str(result) << std::endl;
         }
       }
       return 0;
