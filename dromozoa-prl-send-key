@@ -70,13 +70,13 @@ local key_to_char_capital = {
   SLASH = "?";
 }
 
-local a, b = string.byte("09", 1, 2)
+local a, b = ("09"):byte(1, 2)
 for i = a, b do
   local c = string.char(i)
   key_to_char[c] = c
 end
 
-local a, b = string.byte("AZ", 1, 2)
+local a, b = ("AZ"):byte(1, 2)
 for i = a, b do
   local c = string.char(i)
   key_to_char[c] = c:lower()
