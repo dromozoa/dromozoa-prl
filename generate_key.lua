@@ -15,7 +15,9 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
-local loadstring = loadstring or load
+local loadstring = require "dromozoa.commons.loadstring"
+local pairs = require "dromozoa.commons.pairs"
+local sequence = require "dromozoa.commons.sequence"
 
 local body = assert(io.read("*a"):match("({[^{}]*}) PRL_KEY;"))
 local enum = assert(loadstring("return " .. body))()
@@ -23,17 +25,15 @@ local enum = assert(loadstring("return " .. body))()
 enum.PRL_KEY_INVALID = nil
 enum.PRL_KEY_MAX  = nil
 
-local data = {}
+local data = sequence()
 local i = 0
 for k, v in pairs(enum) do
-  i = i + 1
-  data[i] = { k, v }
+  data:push({ k, v })
 end
-table.sort(data, function (a, b)
+data:sort(function (a, b)
   return a[2] < b[2]
 end)
-
-for i, item in ipairs(data) do
+for item in data:each() do
   local k = item[1]
   io.write("dromozoa::set_field(L, \"", k:gsub("^PRL_KEY_", ""), "\", ", k, ");\n")
 end

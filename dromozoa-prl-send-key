@@ -17,13 +17,14 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
+local nanosleep = require "dromozoa.unix.nanosleep"
 local prl = require "dromozoa.prl"
 
 local name = ...
 local text = io.read("*a")
 
 local function sleep()
-  prl.nanosleep({ tv_sec = 0, tv_nsec = 100000000 })
+  nanosleep({ tv_sec = 0, tv_nsec = 100000000 })
 end
 
 local key_to_char = {
@@ -69,13 +70,13 @@ local key_to_char_capital = {
   SLASH = "?";
 }
 
-local a, b = string.byte("09", 1, 2)
+local a, b = ("09"):byte(1, 2)
 for i = a, b do
   local c = string.char(i)
   key_to_char[c] = c
 end
 
-local a, b = string.byte("AZ", 1, 2)
+local a, b = ("AZ"):byte(1, 2)
 for i = a, b do
   local c = string.char(i)
   key_to_char[c] = c:lower()
