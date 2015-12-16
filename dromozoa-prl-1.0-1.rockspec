@@ -10,6 +10,9 @@ description = {
   homepage = "https://github.com/dromozoa/dromozoa-prl/";
   maintainer = "Tomoyuki Fujimori <moyu@dromozoa.com>";
 }
+dependencies = {
+  "dromozoa-unix";
+}
 build = {
   type = "make";
   build_variables = {
