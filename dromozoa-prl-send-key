@@ -17,18 +17,30 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
+local read_file = require "dromozoa.commons.read_file"
 local nanosleep = require "dromozoa.unix.nanosleep"
 local prl = require "dromozoa.prl"
 
-local name = ...
-local text = io.read("*a")
+local vmname, filename = ...
+
+if vmname == nil then
+  io.stderr:write("usage: dromozoa-prl-send-key vmname [filename]\n")
+  os.exit(1)
+end
+
+local text
+if filename == nil then
+  text = io.read("*a")
+else
+  text = read_file(filename)
+end
 
 local function sleep()
   nanosleep({ tv_sec = 0, tv_nsec = 100000000 })
 end
 
 local key_to_char = {
-  ESCAPE = string.char(0x1B);
+  ESCAPE = string.char(0x1b);
   MINUS = "-";
   EQUAL = "=";
   BACKSPACE = "\b";
@@ -70,17 +82,19 @@ local key_to_char_capital = {
   SLASH = "?";
 }
 
-local a, b = ("09"):byte(1, 2)
-for i = a, b do
-  local c = string.char(i)
-  key_to_char[c] = c
+local n = ("0"):byte()
+for i = 0, 9 do
+  local byte = i + n
+  local char = string.char(byte)
+  key_to_char[char] = char
 end
 
-local a, b = ("AZ"):byte(1, 2)
-for i = a, b do
-  local c = string.char(i)
-  key_to_char[c] = c:lower()
-  key_to_char_capital[c] = c
+local n = ("A"):byte()
+for i = 0, 25 do
+  local byte = i + n
+  local char = string.char(byte)
+  key_to_char[char] = char:lower()
+  key_to_char_capital[char] = char
 end
 
 local char_to_key = {}
@@ -103,7 +117,7 @@ do
   for i = 0, vm_list:get_params_count() - 1 do
     local vm = vm_list:get_param_by_index(i)
     local vm_config = vm:get_config()
-    if vm_config:get_name() == name then
+    if vm_config:get_name() == vmname then
       vm:connect_to_vm():wait():check_ret_code():free()
       for i = 1, #text do
         local c = text:sub(i, i)
