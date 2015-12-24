@@ -1,8 +1,8 @@
 package = "dromozoa-prl"
-version = "1.2-1"
+version = "1.3-1"
 source = {
-  url = "https://github.com/dromozoa/dromozoa-prl/archive/v1.2.tar.gz";
-  file = "dromozoa-prl-1.2.tar.gz";
+  url = "https://github.com/dromozoa/dromozoa-prl/archive/v1.3.tar.gz";
+  file = "dromozoa-prl-1.3.tar.gz";
 }
 description = {
   summary = "Lua bindings for Parallels Virtualization SDK";
@@ -12,6 +12,7 @@ description = {
 }
 dependencies = {
   "dromozoa-commons";
+  "dromozoa-image";
   "dromozoa-unix";
 }
 build = {
