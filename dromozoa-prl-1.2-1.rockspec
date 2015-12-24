@@ -12,6 +12,7 @@ description = {
 }
 dependencies = {
   "dromozoa-commons";
+  "dromozoa-image";
   "dromozoa-unix";
 }
 build = {
