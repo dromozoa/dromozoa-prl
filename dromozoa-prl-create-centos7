@@ -1,0 +1,55 @@
+#! /bin/sh -e
+
+# Copyright (C) 2015 Tomoyuki Fujimori <moyu@dromozoa.com>
+#
+# This file is part of dromozoa-prl.
+#
+# dromozoa-prl is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# dromozoa-prl is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
+
+name=$1
+case x$name in
+  x) exit 1;;
+esac
+shift
+
+cdrom_image=$1
+case x$cdrom_image in
+  x) exit 1;;
+esac
+shift
+
+prlctl create "$name" \
+  --ostype linux \
+  --distribution centos
+prlctl set "$name" --device-del sound0
+prlctl set "$name" --device-del usb
+prlctl set "$name" --device-del hdd0 --destroy-image
+prlctl set "$name" --device-del cdrom0
+prlctl set "$name" --device-add hdd --size 16384 --position 0
+prlctl set "$name" --device-add hdd --size 2048 --position 1
+prlctl set "$name" --device-add cdrom --image "$cdrom_image" --position 2
+prlctl set "$name" \
+    --cpus 1 \
+    --memsize 1024 \
+    --device-bootorder "cdrom0 hdd0" \
+    --videosize 2 \
+    --3d-accelerate off \
+    --smart-mouse-optimize off \
+    --sync-host-printers off \
+    --auto-share-camera off \
+    --faster-vm off \
+    --adaptive-hypervisor on \
+    --longer-battery-life on \
+    --battery-status off \
+    --isolate-vm on

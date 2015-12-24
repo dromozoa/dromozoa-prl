@@ -43,6 +43,8 @@ SdkWrap.o: $(PRL_SDKWRAPDIR)/SdkWrap.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 install:
+	cp dromozoa-prl-create-centos7 $(BINDIR)
 	cp dromozoa-prl-send-key $(BINDIR)
+	cp dromozoa-prl-wait-centos7 $(BINDIR)
 	mkdir -p $(LIBDIR)/dromozoa
 	cp $(TARGET) $(LIBDIR)/dromozoa
