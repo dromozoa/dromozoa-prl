@@ -28,8 +28,13 @@ extern "C" {
 #include <string>
 #include <vector>
 
+#include "dromozoa/bind.hpp"
+
+#include "sdk_wrap.hpp"
+
 namespace dromozoa {
-  lua_Integer log_level = 0;
+  using bind::function;
+  using bind::get_log_level;
 
   inline void set_field(lua_State* L, const char* key, lua_Integer value) {
     lua_pushinteger(L, value);
@@ -80,7 +85,7 @@ namespace dromozoa {
 
       PRL_RESULT result = PrlHandle_Free(handle);
       if (PRL_SUCCEEDED(result)) {
-        if (log_level > 2) {
+        if (get_log_level() > 2) {
           std::cerr << "[dromozoa-prl] detach handle " << get_handle_address(handle) << " (" << handle_type_to_string(type) << ")" << std::endl;
         }
       }
@@ -141,7 +146,7 @@ namespace dromozoa {
     luaL_getmetatable(L, name);
     lua_setmetatable(L, -2);
 
-    if (log_level > 2) {
+    if (get_log_level() > 2) {
       std::cerr << "[dromozoa-prl] attach handle " << get_handle_address(handle) << " (" << handle_type_to_string(type) << ")" << std::endl;
     }
 
@@ -205,13 +210,13 @@ namespace dromozoa {
       PRL_HANDLE handle = get_handle(L, 1);
       if (handle != PRL_INVALID_HANDLE) {
         lua_Integer address = get_handle_address(handle);
-        if (log_level > 1) {
+        if (get_log_level() > 1) {
           std::cerr << "[dromozoa-prl] handle " << address << " detected" << std::endl;
         }
         PRL_RESULT result = free_handle(handle);
         if (PRL_SUCCEEDED(result)) {
           set_invalid_handle(L, 1);
-        } else if (log_level > 0) {
+        } else if (get_log_level() > 0) {
           std::cerr << "[dromozoa-prl] cannot free handle " << address << ": " << result_to_str(result) << std::endl;
         }
       }
@@ -223,29 +228,6 @@ namespace dromozoa {
   inline void inherit(lua_State* L, const char* name) {
     luaL_getmetatable(L, name);
     lua_setmetatable(L, -2);
-  }
-
-  inline int open_sdk_wrap(lua_State* L) {
-    lua_newtable(L);
-
-    set_field(L, "is_loaded", [](lua_State* L) {
-      lua_pushboolean(L, SdkWrap_IsLoaded());
-      return 1;
-    });
-
-    set_field(L, "load", [](lua_State* L) {
-      return ret(L, SdkWrap_Load(luaL_checkstring(L, 1), lua_toboolean(L, 2)));
-    });
-
-    set_field(L, "load_lib_from_std_paths", [](lua_State* L) {
-      return ret(L, SdkWrap_LoadLibFromStdPaths(lua_toboolean(L, 1)));
-    });
-
-    set_field(L, "unload", [](lua_State* L) {
-      return ret(L, SdkWrap_Unload());
-    });
-
-    return 1;
   }
 
   inline int open_handle(lua_State* L) {
@@ -472,16 +454,6 @@ namespace dromozoa {
               luaL_optinteger(L, 4, 0)));
     });
 
-    set_field(L, "set_log_level", [](lua_State* L) {
-      log_level = luaL_checkinteger(L, 1);
-      return 0;
-    });
-
-    set_field(L, "get_log_level", [](lua_State* L) {
-      lua_pushinteger(L, log_level);
-      return 1;
-    });
-
     open_handle(L);
     lua_setfield(L, -2, "handle");
 
@@ -507,46 +479,41 @@ namespace dromozoa {
   inline void initialize_enum(lua_State* L) {
     set_field(L, "API_VER", PARALLELS_API_VER);
 
-#define DROMOZOA_SET_FIELD(L, value) \
-  dromozoa::set_field(L, #value, (value))
-
     // PRL_API_COMMAND_FLAGS
-    DROMOZOA_SET_FIELD(L, PACF_NORMAL_SECURITY);
-    DROMOZOA_SET_FIELD(L, PACF_HIGH_SECURITY);
-    DROMOZOA_SET_FIELD(L, PACF_NON_INTERACTIVE_MODE);
-    DROMOZOA_SET_FIELD(L, PACF_CANCEL_TASK_ON_END_SESSION);
+    DROMOZOA_BIND_SET_FIELD(L, PACF_NORMAL_SECURITY);
+    DROMOZOA_BIND_SET_FIELD(L, PACF_HIGH_SECURITY);
+    DROMOZOA_BIND_SET_FIELD(L, PACF_NON_INTERACTIVE_MODE);
+    DROMOZOA_BIND_SET_FIELD(L, PACF_CANCEL_TASK_ON_END_SESSION);
 
     // PRL_API_INIT_FLAGS
-    DROMOZOA_SET_FIELD(L, PAIF_USE_GRAPHIC_MODE);
-    DROMOZOA_SET_FIELD(L, PAIF_INIT_AS_APPSTORE_CLIENT);
+    DROMOZOA_BIND_SET_FIELD(L, PAIF_USE_GRAPHIC_MODE);
+    DROMOZOA_BIND_SET_FIELD(L, PAIF_INIT_AS_APPSTORE_CLIENT);
 
     // PRL_APPLICATION_MODE
-    DROMOZOA_SET_FIELD(L, PAM_UNKNOWN);
-    DROMOZOA_SET_FIELD(L, PAM_SERVER);
-    DROMOZOA_SET_FIELD(L, PAM_DESKTOP_MAC);
-    DROMOZOA_SET_FIELD(L, PAM_WORKSTATION_EXTREME);
-    DROMOZOA_SET_FIELD(L, PAM_PLAYER);
-    DROMOZOA_SET_FIELD(L, PAM_DESKTOP_STM);
-    DROMOZOA_SET_FIELD(L, PAM_DESKTOP_WL);
-    DROMOZOA_SET_FIELD(L, PAM_MOBILE);
-    DROMOZOA_SET_FIELD(L, PAM_DESKTOP_STM_OBSOLETE);
-    DROMOZOA_SET_FIELD(L, PAM_DESKTOP);
-    DROMOZOA_SET_FIELD(L, PAM_WORKSTATION);
-    DROMOZOA_SET_FIELD(L, PAM_STM);
+    DROMOZOA_BIND_SET_FIELD(L, PAM_UNKNOWN);
+    DROMOZOA_BIND_SET_FIELD(L, PAM_SERVER);
+    DROMOZOA_BIND_SET_FIELD(L, PAM_DESKTOP_MAC);
+    DROMOZOA_BIND_SET_FIELD(L, PAM_WORKSTATION_EXTREME);
+    DROMOZOA_BIND_SET_FIELD(L, PAM_PLAYER);
+    DROMOZOA_BIND_SET_FIELD(L, PAM_DESKTOP_STM);
+    DROMOZOA_BIND_SET_FIELD(L, PAM_DESKTOP_WL);
+    DROMOZOA_BIND_SET_FIELD(L, PAM_MOBILE);
+    DROMOZOA_BIND_SET_FIELD(L, PAM_DESKTOP_STM_OBSOLETE);
+    DROMOZOA_BIND_SET_FIELD(L, PAM_DESKTOP);
+    DROMOZOA_BIND_SET_FIELD(L, PAM_WORKSTATION);
+    DROMOZOA_BIND_SET_FIELD(L, PAM_STM);
 
     // PRL_DISPLAY_CODEC_TYPE
-    DROMOZOA_SET_FIELD(L, PDCT_HIGH_QUALITY_WITHOUT_COMPRESSION);
-    DROMOZOA_SET_FIELD(L, PDCT_HIGH_QUALITY_WITH_COMPRESSION);
-    DROMOZOA_SET_FIELD(L, PDCT_MEDIUM_QUALITY_WITHOUT_COMPRESSION);
-    DROMOZOA_SET_FIELD(L, PDCT_MEDIUM_QUALITY_WITH_COMPRESSION);
-    DROMOZOA_SET_FIELD(L, PDCT_LOW_QUALITY_WITHOUT_COMPRESSION);
-    DROMOZOA_SET_FIELD(L, PDCT_LOW_QUALITY_WITH_COMPRESSION);
+    DROMOZOA_BIND_SET_FIELD(L, PDCT_HIGH_QUALITY_WITHOUT_COMPRESSION);
+    DROMOZOA_BIND_SET_FIELD(L, PDCT_HIGH_QUALITY_WITH_COMPRESSION);
+    DROMOZOA_BIND_SET_FIELD(L, PDCT_MEDIUM_QUALITY_WITHOUT_COMPRESSION);
+    DROMOZOA_BIND_SET_FIELD(L, PDCT_MEDIUM_QUALITY_WITH_COMPRESSION);
+    DROMOZOA_BIND_SET_FIELD(L, PDCT_LOW_QUALITY_WITHOUT_COMPRESSION);
+    DROMOZOA_BIND_SET_FIELD(L, PDCT_LOW_QUALITY_WITH_COMPRESSION);
 
     // PRL_KEY_EVENT
-    DROMOZOA_SET_FIELD(L, PKE_PRESS);
-    DROMOZOA_SET_FIELD(L, PKE_RELEASE);
-
-#undef DROMOZOA_SET_FIELD
+    DROMOZOA_BIND_SET_FIELD(L, PKE_PRESS);
+    DROMOZOA_BIND_SET_FIELD(L, PKE_RELEASE);
   }
 
   int open(lua_State* L) {
@@ -555,6 +522,7 @@ namespace dromozoa {
     open_sdk_wrap(L);
     lua_setfield(L, -2, "sdk_wrap");
 
+    bind::initialize(L);
     initialize_core(L);
     initialize_enum(L);
 

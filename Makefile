@@ -30,14 +30,23 @@ all: $(TARGET)
 clean:
 	rm -f key.hpp *.o $(TARGET)
 
-prl.so: bind.o module.o SdkWrap.o
+prl.so: bind.o error.o result.o sdk_wrap.o module.o SdkWrap.o
 	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 bind.o: bind/bind.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
+error.o: error.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
+
+result.o: result.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
+
 key.hpp: $(PRL_SDKDIR)/Headers/PrlKeys.h
 	$(LUA) generate_key.lua <$< >$@
+
+sdk_wrap.o: sdk_wrap.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 module.o: module.cpp key.hpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
