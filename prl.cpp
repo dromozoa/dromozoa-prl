@@ -548,16 +548,20 @@ namespace dromozoa {
 
 #undef DROMOZOA_SET_FIELD
   }
+
+  int open(lua_State* L) {
+    lua_newtable(L);
+
+    open_sdk_wrap(L);
+    lua_setfield(L, -2, "sdk_wrap");
+
+    initialize_core(L);
+    initialize_enum(L);
+
+    return 1;
+  }
 }
 
 extern "C" int luaopen_dromozoa_prl(lua_State* L) {
-  lua_newtable(L);
-
-  dromozoa::open_sdk_wrap(L);
-  lua_setfield(L, -2, "sdk_wrap");
-
-  dromozoa::initialize_core(L);
-  dromozoa::initialize_enum(L);
-
-  return 1;
+  return dromozoa::open(L);
 }
