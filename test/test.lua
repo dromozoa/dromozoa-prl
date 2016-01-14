@@ -20,7 +20,9 @@ local prl = require "dromozoa.prl"
 prl.set_log_level(3)
 prl.set_raise_error(true)
 
+assert(not prl.sdk_wrap.is_loaded())
 prl.sdk_wrap.load_lib_from_std_paths()
+assert(prl.sdk_wrap.is_loaded())
 prl.init_ex()
 
 local server = prl.server.create()
