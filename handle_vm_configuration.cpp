@@ -26,11 +26,9 @@ extern "C" {
 
 #include "dromozoa/bind.hpp"
 
-#include "enum.hpp"
 #include "error.hpp"
 #include "handle.hpp"
 #include "handle_server.hpp"
-#include "result.hpp"
 
 namespace dromozoa {
   using bind::function;
