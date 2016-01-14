@@ -32,11 +32,6 @@ namespace dromozoa {
   using bind::push_success;
 
   namespace {
-    int impl_is_loaded(lua_State* L) {
-      lua_pushboolean(L, SdkWrap_IsLoaded());
-      return 1;
-    }
-
     int impl_load(lua_State* L) {
       PRL_RESULT result = SdkWrap_Load(luaL_checkstring(L, 1), lua_toboolean(L, 2));
       if (PRL_FAILED(result)) {
@@ -67,7 +62,6 @@ namespace dromozoa {
 
   int open_sdk_wrap(lua_State* L) {
     lua_newtable(L);
-    function<impl_is_loaded>::set_field(L, "is_loaded");
     function<impl_load>::set_field(L, "load");
     function<impl_load_lib_from_std_paths>::set_field(L, "load_lib_from_std_paths");
     function<impl_unload>::set_field(L, "unload");

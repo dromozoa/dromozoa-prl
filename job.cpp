@@ -45,7 +45,6 @@ namespace dromozoa {
       }
     }
 
-    // [TODO] remove
     int impl_get_ret_code(lua_State* L) {
       PRL_RESULT code = PRL_ERR_SUCCESS;
       PRL_RESULT result = PrlJob_GetRetCode(get_handle(L, 1), &code);
@@ -55,6 +54,19 @@ namespace dromozoa {
         push_error_string(L, code);
         lua_pushinteger(L, code);
         return 2;
+      }
+    }
+
+    int impl_check_ret_code(lua_State* L) {
+      PRL_RESULT code = PRL_ERR_SUCCESS;
+      PRL_RESULT result = PrlJob_GetRetCode(get_handle(L, 1), &code);
+      if (PRL_FAILED(result)) {
+        return push_error(L, result);
+      }
+      if (PRL_FAILED(code)) {
+        return push_error(L, code);
+      } else {
+        return push_success(L);
       }
     }
 
@@ -69,38 +81,18 @@ namespace dromozoa {
       }
     }
 
-    // [TODO] rename
-    int impl_check_ret_code(lua_State* L) {
-      PRL_RESULT code = PRL_ERR_SUCCESS;
-      PRL_RESULT result = PrlJob_GetRetCode(get_handle(L, 1), &code);
-      if (PRL_SUCCEEDED(result)) {
-        if (PRL_SUCCEEDED(code)) {
-          return push_success(L);
-        } else {
-          push_error_string(L, code);
-          return lua_error(L);
-        }
-      } else {
-        push_error_string(L, result);
-        return lua_error(L);
-      }
-    }
-
     int impl_get_result_and_free(lua_State* L) {
       if (PRL_HANDLE* data = static_cast<PRL_HANDLE*>(lua_touserdata(L, 1))) {
         PRL_HANDLE handle = PRL_INVALID_HANDLE;
         PRL_RESULT result = PrlJob_GetResult(*data, &handle);
-        if (PRL_SUCCEEDED(result)) {
-          PRL_RESULT result = free_handle(*data);
-          if (PRL_SUCCEEDED(result)) {
-            *data = PRL_INVALID_HANDLE;
-            return new_handle(L, handle);
-          } else {
-            return push_error(L, result);
-          }
-        } else {
+        if (PRL_FAILED(result)) {
           return push_error(L, result);
         }
+        result = free_handle(*data);
+        if (PRL_SUCCEEDED(result)) {
+          *data = PRL_INVALID_HANDLE;
+        }
+        return new_handle(L, handle);
       } else {
         return push_error(L, PRL_ERR_INVALID_HANDLE);
       }

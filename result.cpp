@@ -32,16 +32,6 @@ namespace dromozoa {
   using bind::function;
 
   namespace {
-    int impl_get_param_by_index(lua_State* L) {
-      PRL_HANDLE handle = PRL_INVALID_HANDLE;
-      PRL_RESULT result = PrlResult_GetParamByIndex(get_handle(L, 1), luaL_checkinteger(L, 2), &handle);
-      if (PRL_FAILED(result)) {
-        return push_error(L, result);
-      } else {
-        return new_handle(L, handle);
-      }
-    }
-
     int impl_get_params_count(lua_State* L) {
       PRL_UINT32 count = 0;
       PRL_RESULT result = PrlResult_GetParamsCount(get_handle(L, 1), &count);
@@ -50,6 +40,17 @@ namespace dromozoa {
       } else {
         lua_pushinteger(L, count);
         return 1;
+      }
+    }
+
+    int impl_get_param_by_index(lua_State* L) {
+      PRL_HANDLE handle = PRL_INVALID_HANDLE;
+      PRL_UINT32 i = luaL_checkinteger(L, 2) - 1;
+      PRL_RESULT result = PrlResult_GetParamByIndex(get_handle(L, 1), i, &handle);
+      if (PRL_FAILED(result)) {
+        return push_error(L, result);
+      } else {
+        return new_handle(L, handle);
       }
     }
   }
