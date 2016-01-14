@@ -29,7 +29,7 @@ OBJS = \
 	error.o \
 	handle.o \
 	job.o \
-	handle_result.o \
+	result.o \
 	server.o \
 	virtual_machine.o \
 	vm_configuration.o \

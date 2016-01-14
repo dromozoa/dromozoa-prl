@@ -54,7 +54,7 @@ namespace dromozoa {
     }
   }
 
-  int open_handle_result(lua_State* L) {
+  int open_result(lua_State* L) {
     lua_newtable(L);
     function<impl_get_param_by_index>::set_field(L, "get_param_by_index");
     function<impl_get_params_count>::set_field(L, "get_params_count");

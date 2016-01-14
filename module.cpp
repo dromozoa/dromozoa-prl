@@ -32,7 +32,7 @@ extern "C" {
 
 #include "enum.hpp"
 #include "handle.hpp"
-#include "handle_result.hpp"
+#include "result.hpp"
 #include "job.hpp"
 #include "error.hpp"
 #include "server.hpp"
@@ -86,7 +86,7 @@ namespace dromozoa {
     open_job(L);
     lua_setfield(L, -2, "job");
 
-    open_handle_result(L);
+    open_result(L);
     lua_setfield(L, -2, "result");
 
     open_server(L);
