@@ -33,7 +33,6 @@ OBJS = \
 	server.o \
 	virtual_machine.o \
 	vm_configuration.o \
-	result.o \
 	sdk_wrap.o \
 	module.o \
 	SdkWrap.o
