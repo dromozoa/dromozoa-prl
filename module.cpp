@@ -30,6 +30,9 @@ extern "C" {
 
 #include "dromozoa/bind.hpp"
 
+#include "handle.hpp"
+#include "handle_result.hpp"
+#include "result.hpp"
 #include "sdk_wrap.hpp"
 
 namespace dromozoa {
@@ -74,27 +77,6 @@ namespace dromozoa {
     *data = PRL_INVALID_HANDLE;
   }
 
-  inline lua_Integer get_handle_address(PRL_HANDLE handle) {
-    return reinterpret_cast<lua_Integer>(handle);
-  }
-
-  inline PRL_RESULT free_handle(PRL_HANDLE handle) {
-    if (PrlHandle_Free) {
-      PRL_HANDLE_TYPE type = PHT_ERROR;
-      PrlHandle_GetType(handle, &type);
-
-      PRL_RESULT result = PrlHandle_Free(handle);
-      if (PRL_SUCCEEDED(result)) {
-        if (get_log_level() > 2) {
-          std::cerr << "[dromozoa-prl] detach handle " << get_handle_address(handle) << " (" << handle_type_to_string(type) << ")" << std::endl;
-        }
-      }
-      return result;
-    } else {
-      return PRL_ERR_UNINITIALIZED;
-    }
-  }
-
   inline std::string result_to_str(PRL_RESULT result) {
     const char* string = 0;
     if (PrlDbg_PrlResultToString) {
@@ -120,58 +102,15 @@ namespace dromozoa {
   }
 
   inline int ret_handle(lua_State* L, PRL_HANDLE handle) {
-    PRL_HANDLE_TYPE type = PHT_ERROR;
-    PrlHandle_GetType(handle, &type);
-
-    const char* name = "dromozoa.prl.handle";
-    switch (type) {
-      case PHT_JOB:
-        name = "dromozoa.prl.job";
-        break;
-      case PHT_RESULT:
-        name = "dromozoa.prl.result";
-        break;
-      case PHT_SERVER:
-        name = "dromozoa.prl.server";
-        break;
-      case PHT_VIRTUAL_MACHINE:
-        name = "dromozoa.prl.virtual_machine";
-        break;
-      default:
-        break;
-    }
-
-    PRL_HANDLE* data = static_cast<PRL_HANDLE*>(lua_newuserdata(L, sizeof(PRL_HANDLE)));
-    *data = handle;
-    luaL_getmetatable(L, name);
-    lua_setmetatable(L, -2);
-
-    if (get_log_level() > 2) {
-      std::cerr << "[dromozoa-prl] attach handle " << get_handle_address(handle) << " (" << handle_type_to_string(type) << ")" << std::endl;
-    }
-
-    return 1;
+    return new_handle(L, handle);
   }
 
   inline int ret(lua_State* L, PRL_RESULT result) {
-    if (PRL_FAILED(result)) {
-      return ret_error(L, result);
-    } else {
-      if (lua_isuserdata(L, 1)) {
-        lua_pushvalue(L, 1);
-      } else {
-        lua_pushboolean(L, true);
-      }
-      return 1;
-    }
+    return push_result(L, result);
   }
 
   inline int ret(lua_State* L, PRL_HANDLE result) {
-    if (result == PRL_INVALID_HANDLE) {
-      return ret_error(L, PRL_ERR_INVALID_HANDLE);
-    } else {
-      return ret_handle(L, result);
-    }
+    return push_result(L, result);
   }
 
   inline int ret(lua_State* L, PRL_RESULT result, const PRL_RESULT* code) {
@@ -305,35 +244,6 @@ namespace dromozoa {
     });
 
     prototype(L, "dromozoa.prl.job");
-    inherit(L, "dromozoa.prl.handle");
-
-    return 1;
-  }
-
-  inline int open_handle_result(lua_State* L) {
-    lua_newtable(L);
-
-    set_field(L, "get_param_by_index", [](lua_State* L) {
-      PRL_HANDLE handle = PRL_INVALID_HANDLE;
-      return ret(L,
-          PrlResult_GetParamByIndex(
-              get_handle(L, 1),
-              luaL_checkinteger(L, 2),
-              &handle),
-          &handle);
-    });
-
-    set_field(L, "get_params_count", [](lua_State* L) {
-      PRL_UINT32 count = 0;
-      PRL_RESULT result = PrlResult_GetParamsCount(get_handle(L, 1), &count);
-      if (PRL_SUCCEEDED(result)) {
-        lua_pushinteger(L, count);
-        return 1;
-      }
-      return ret(L, result);
-    });
-
-    prototype(L, "dromozoa.prl.result");
     inherit(L, "dromozoa.prl.handle");
 
     return 1;

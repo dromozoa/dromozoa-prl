@@ -24,16 +24,46 @@ extern "C" {
 #include "dromozoa/bind.hpp"
 
 #include "error.hpp"
+#include "handle.hpp"
 #include "result.hpp"
 
 namespace dromozoa {
   using bind::push_success;
 
   int push_result(lua_State* L, PRL_RESULT result) {
-    if (PRL_FAILED(result)) {
-      return push_error(L, result);
-    } else {
+    if (PRL_SUCCEEDED(result)) {
       return push_success(L);
+    } else {
+      return push_error(L, result);
+    }
+  }
+
+  int push_result(lua_State* L, PRL_RESULT result, PRL_RESULT code) {
+    if (PRL_SUCCEEDED(result)) {
+      // [TODO] 仕様決定
+      push_error_string(L, code);
+      lua_pushinteger(L, code);
+      return 2;
+    } else {
+      return push_error(L, result);
+    }
+  }
+
+  int push_result(lua_State* L, PRL_RESULT result, PRL_HANDLE handle) {
+    if (PRL_SUCCEEDED(result)) {
+      new_handle(L, handle);
+      return 1;
+    } else {
+      return push_error(L, result);
+    }
+  }
+
+  int push_result(lua_State* L, PRL_HANDLE handle) {
+    if (handle != PRL_INVALID_HANDLE) {
+      new_handle(L, handle);
+      return 1;
+    } else {
+      return push_error(L, PRL_ERR_INVALID_HANDLE);
     }
   }
 }

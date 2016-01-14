@@ -24,29 +24,33 @@ LDFLAGS = -L$(LUA_LIBDIR) $(LIBFLAG)
 LDLIBS = -ldl
 
 TARGET = prl.so
+OBJS = \
+	bind.o \
+	error.o \
+	handle.o \
+	handle_job.o \
+	handle_result.o \
+	handle_server.o \
+	handle_virtual_machine.o \
+	handle_vm_configuration.o \
+	result.o \
+	sdk_wrap.o \
+	module.o \
+	SdkWrap.o
 
 all: $(TARGET)
 
 clean:
 	rm -f key.hpp *.o $(TARGET)
 
-prl.so: bind.o error.o result.o sdk_wrap.o module.o SdkWrap.o
+prl.so: $(OBJS)
 	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-bind.o: bind/bind.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
-
-error.o: error.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
-
-result.o: result.cpp
+.cpp.o:
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 key.hpp: $(PRL_SDKDIR)/Headers/PrlKeys.h
 	$(LUA) generate_key.lua <$< >$@
-
-sdk_wrap.o: sdk_wrap.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 module.o: module.cpp key.hpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<

@@ -26,8 +26,7 @@ extern "C" {
 #include "error.hpp"
 
 namespace dromozoa {
-  int push_error(lua_State* L, PRL_RESULT result) {
-    lua_pushnil(L);
+  int push_error_string(lua_State* L, PRL_RESULT result) {
     const char* string = 0;
     if (PrlDbg_PrlResultToString) {
       PrlDbg_PrlResultToString(result, &string);
@@ -41,6 +40,12 @@ namespace dromozoa {
         lua_pushfstring(L, "PRL_RESULT_DECLARE_ERROR(%x)", result - 0x80000000);
       }
     }
+    return 1;
+  }
+
+  int push_error(lua_State* L, PRL_RESULT result) {
+    lua_pushnil(L);
+    push_error_string(L, result);
     lua_pushinteger(L, result);
     return 3;
   }

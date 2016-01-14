@@ -15,21 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef DROMOZOA_ERROR_HPP
-#define DROMOZOA_ERROR_HPP
+#ifndef DROMOZOA_HANDLE_SERVER_HPP
+#define DROMOZOA_HANDLE_SERVER_HPP
 
 extern "C" {
 #include <lua.h>
 }
 
-#include <PrlTypes.h>
-
-#include <iosfwd>
-
 namespace dromozoa {
-  int push_error_string(lua_State* L, PRL_RESULT result);
-  int push_error(lua_State* L, PRL_RESULT result);
-  void print_error(std::ostream& out, PRL_RESULT result);
+  int open_handle_server(lua_State* L);
 }
 
 #endif

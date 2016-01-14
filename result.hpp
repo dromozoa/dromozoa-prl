@@ -26,6 +26,9 @@ extern "C" {
 
 namespace dromozoa {
   int push_result(lua_State* L, PRL_RESULT result);
+  int push_result(lua_State* L, PRL_RESULT result, PRL_RESULT code);
+  int push_result(lua_State* L, PRL_RESULT result, PRL_HANDLE handle);
+  int push_result(lua_State* L, PRL_HANDLE handle);
 }
 
 #endif
