@@ -1,4 +1,4 @@
-# Copyright (C) 2015 Tomoyuki Fujimori <moyu@dromozoa.com>
+# Copyright (C) 2015,2016 Tomoyuki Fujimori <moyu@dromozoa.com>
 #
 # This file is part of dromozoa-prl.
 #
@@ -28,6 +28,7 @@ OBJS = \
 	bind.o \
 	error.o \
 	handle.o \
+	enum.o \
 	job.o \
 	result.o \
 	server.o \

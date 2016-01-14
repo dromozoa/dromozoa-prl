@@ -20,19 +20,25 @@
 
 extern "C" {
 #include <lua.h>
-#include <lauxlib.h>
 }
 
 namespace dromozoa {
+  namespace detail {
+    lua_Integer check_enum(lua_State* L, int n);
+    lua_Integer opt_enum(lua_State* L, int n, lua_Integer d);
+  }
+
   template <class T>
   inline T check_enum(lua_State* L, int n) {
-    return static_cast<T>(luaL_checkinteger(L, n));
+    return static_cast<T>(detail::check_enum(L, n));
   }
 
   template <class T>
   inline T opt_enum(lua_State* L, int n, T d) {
-    return static_cast<T>(luaL_optinteger(L, n, d));
+    return static_cast<T>(detail::opt_enum(L, n, d));
   }
+
+  void initialize_enum(lua_State* L);
 }
 
 #endif
