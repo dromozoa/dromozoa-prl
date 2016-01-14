@@ -26,6 +26,7 @@ LDLIBS = -ldl
 TARGET = prl.so
 OBJS = \
 	bind.o \
+	api.o \
 	error.o \
 	handle.o \
 	enum.o \

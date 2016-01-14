@@ -30,6 +30,7 @@ extern "C" {
 
 #include "dromozoa/bind.hpp"
 
+#include "api.hpp"
 #include "enum.hpp"
 #include "handle.hpp"
 #include "result.hpp"
@@ -48,34 +49,7 @@ namespace dromozoa {
 
   int open_key(lua_State* L);
 
-  namespace {
-    int impl_deinit(lua_State* L) {
-      PRL_RESULT result = PrlApi_Deinit();
-      if (PRL_FAILED(result)) {
-        return push_error(L, result);
-      } else {
-        return push_success(L);
-      }
-    }
-
-    int impl_init_ex(lua_State* L) {
-      PRL_RESULT result = PrlApi_InitEx(
-          luaL_optinteger(L, 1, PARALLELS_API_VER),
-          opt_enum(L, 2, PAM_DESKTOP),
-          luaL_optinteger(L, 3, 0),
-          luaL_optinteger(L, 4, 0));
-      if (PRL_FAILED(result)) {
-        return push_error(L, result);
-      } else {
-        return push_success(L);
-      }
-    }
-  }
-
   inline void initialize_core(lua_State* L) {
-    function<impl_deinit>::set_field(L, "deinit");
-    function<impl_init_ex>::set_field(L, "init_ex");
-
     open_handle(L);
     lua_setfield(L, -2, "handle");
 
@@ -105,6 +79,7 @@ namespace dromozoa {
     lua_setfield(L, -2, "sdk_wrap");
 
     bind::initialize(L);
+    initialize_api(L);
     initialize_core(L);
     initialize_enum(L);
 
