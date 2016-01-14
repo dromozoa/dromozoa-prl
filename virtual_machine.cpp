@@ -88,7 +88,7 @@ namespace dromozoa {
     }
   }
 
-  int open_handle_virtual_machine(lua_State* L) {
+  int open_virtual_machine(lua_State* L) {
     lua_newtable(L);
     function<impl_connect_to_vm>::set_field(L, "connect_to_vm");
     function<impl_disconnect_from_vm>::set_field(L, "disconnect_from_vm");

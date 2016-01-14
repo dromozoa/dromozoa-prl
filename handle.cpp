@@ -130,11 +130,30 @@ namespace dromozoa {
         return push_error(L, PRL_ERR_INVALID_HANDLE);
       }
     }
+
+    int impl_get_type(lua_State* L) {
+      PRL_HANDLE_TYPE type = PHT_ERROR;
+      PRL_RESULT result = PrlHandle_GetType(get_handle(L, 1), &type);
+      if (PRL_FAILED(result)) {
+        return push_error(L, result);
+      } else {
+        lua_pushstring(L, handle_type_to_string(type));
+        lua_pushinteger(L, type);
+        return 2;
+      }
+    }
+
+    int impl_get_address(lua_State* L) {
+      lua_pushinteger(L, get_handle_address(get_handle(L, 1)));
+      return 1;
+    }
   }
 
-  int open_handle_(lua_State* L) {
+  int open_handle(lua_State* L) {
     lua_newtable(L);
     function<impl_free>::set_field(L, "free");
+    function<impl_get_type>::set_field(L, "get_type");
+    function<impl_get_address>::set_field(L, "get_address");
 
     luaL_newmetatable(L, "dromozoa.prl.handle");
     lua_pushvalue(L, -2);
