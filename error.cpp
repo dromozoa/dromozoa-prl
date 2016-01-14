@@ -21,6 +21,8 @@ extern "C" {
 
 #include <SdkWrap.h>
 
+#include <stdio.h>
+
 #include <iostream>
 
 #include "error.hpp"
@@ -37,7 +39,10 @@ namespace dromozoa {
       if (PRL_SUCCEEDED(result)) {
         lua_pushfstring(L, "PRL_RESULT_DECLARE_SUCCESS(%d)", result);
       } else {
-        lua_pushfstring(L, "PRL_RESULT_DECLARE_ERROR(%x)", result - 0x80000000);
+        enum { size = sizeof(PRL_RESULT) * 2 + 1 };
+        char buffer[size] = { '\0' };
+        snprintf(buffer, size, "%x", result);
+        lua_pushfstring(L, "PRL_RESULT_DECLARE_ERROR(%s)", buffer);
       }
     }
     return 1;
@@ -61,9 +66,10 @@ namespace dromozoa {
       if (PRL_SUCCEEDED(result)) {
         out << "PRL_RESULT_DECLARE_SUCCESS(" << result << ")";
       } else {
-        std::ios::fmtflags flags = out.flags();
-        out << "PRL_RESULT_DECLARE_ERROR(" << std::hex << (result - 0x80000000) << ")";
-        out.flags(flags);
+        enum { size = sizeof(PRL_RESULT) * 2 + 1 };
+        char buffer[size] = { '\0' };
+        snprintf(buffer, size, "%x", result);
+        out << "PRL_RESULT_DECLARE_ERROR(" << buffer << ")";
       }
     }
   }
