@@ -34,13 +34,14 @@ OBJS = \
 	virtual_machine.o \
 	vm_configuration.o \
 	sdk_wrap.o \
+	key.o \
 	module.o \
 	SdkWrap.o
 
 all: $(TARGET)
 
 clean:
-	rm -f key.hpp *.o $(TARGET)
+	rm -f key.cpp *.o $(TARGET)
 
 prl.so: $(OBJS)
 	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $@
@@ -48,13 +49,13 @@ prl.so: $(OBJS)
 .cpp.o:
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
-key.hpp: $(PRL_SDKDIR)/Headers/PrlKeys.h
+key.cpp: $(PRL_SDKDIR)/Headers/PrlKeys.h
 	$(LUA) generate_key.lua <$< >$@
 
 bind.o: bind/bind.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
-module.o: module.cpp key.hpp
+module.o: module.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 SdkWrap.o: $(PRL_SDKWRAPDIR)/SdkWrap.cpp

@@ -46,11 +46,7 @@ namespace dromozoa {
   using bind::push_success;
   using bind::set_field;
 
-  inline int open_key(lua_State* L) {
-    lua_newtable(L);
-#include "key.hpp"
-    return 1;
-  }
+  int open_key(lua_State* L);
 
   namespace {
     int impl_deinit(lua_State* L) {
