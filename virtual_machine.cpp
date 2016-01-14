@@ -27,8 +27,7 @@ extern "C" {
 #include "enum.hpp"
 #include "error.hpp"
 #include "handle.hpp"
-#include "handle_server.hpp"
-#include "result.hpp"
+#include "virtual_machine.hpp"
 
 namespace dromozoa {
   using bind::function;
