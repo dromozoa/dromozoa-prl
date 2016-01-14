@@ -19,7 +19,7 @@ PRL_SDKDIR = /Library/Frameworks/ParallelsVirtualizationSDK.framework
 PRL_SDKWRAPDIR = $(PRL_SDKDIR)/Libraries/Helpers/SdkWrap
 
 CPPFLAGS = -DDYN_API_WRAP -Ibind -I$(LUA_INCDIR) -I$(PRL_SDKDIR)/Headers -I$(PRL_SDKWRAPDIR)
-CXXFLAGS = -Wall -W -std=c++11 $(CFLAGS)
+CXXFLAGS = -Wall -W $(CFLAGS)
 LDFLAGS = -L$(LUA_LIBDIR) $(LIBFLAG)
 LDLIBS = -ldl
 
