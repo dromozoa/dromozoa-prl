@@ -18,7 +18,7 @@
 -- along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
 local read_file = require "dromozoa.commons.read_file"
-local nanosleep = require "dromozoa.unix.nanosleep"
+local unix = require "dromozoa.unix"
 local prl = require "dromozoa.prl"
 
 local vmname, filename = ...
@@ -36,7 +36,7 @@ else
 end
 
 local function sleep()
-  nanosleep({ tv_sec = 0, tv_nsec = 100000000 })
+  unix.nanosleep({ tv_sec = 0, tv_nsec = 100000000 })
 end
 
 local key_to_char = {
@@ -106,6 +106,7 @@ for key, char in pairs(key_to_char_capital) do
 end
 
 prl.set_log_level(1)
+prl.set_raise_error(true)
 prl.sdk_wrap.load_lib_from_std_paths()
 prl.init_ex()
 
@@ -114,7 +115,7 @@ do
   server:login_local():wait():check_ret_code():free()
 
   local vm_list = server:get_vm_list():wait():get_result_and_free()
-  for i = 0, vm_list:get_params_count() - 1 do
+  for i = 1, vm_list:get_params_count() do
     local vm = vm_list:get_param_by_index(i)
     local vm_config = vm:get_config()
     if vm_config:get_name() == vmname then
