@@ -96,27 +96,6 @@ namespace dromozoa {
     }
   }
 
-  int gc_handle(lua_State* L) {
-    if (PRL_HANDLE* data = static_cast<PRL_HANDLE*>(lua_touserdata(L, 1))) {
-      PRL_HANDLE handle = *data;
-      *data = PRL_INVALID_HANDLE;
-      if (handle != PRL_INVALID_HANDLE) {
-        if (get_log_level() > 1) {
-          std::cerr << "[dromozoa-prl] handle " << get_handle_address(handle) << " detected" << std::endl;
-        }
-        PRL_RESULT result = free_handle(handle);
-        if (PRL_FAILED(result)) {
-          if (get_log_level() > 0) {
-            std::cerr << "[dromozoa-prl] cannot free handle " << get_handle_address(handle) << ": ";
-            print_error(std::cerr, result);
-            std::cerr << std::endl;
-          }
-        }
-      }
-    }
-    return 0;
-  }
-
   namespace {
     int impl_free(lua_State* L) {
       if (PRL_HANDLE* data = static_cast<PRL_HANDLE*>(lua_touserdata(L, 1))) {
@@ -128,6 +107,27 @@ namespace dromozoa {
       } else {
         return push_error(L, PRL_ERR_INVALID_HANDLE);
       }
+    }
+
+    int impl_gc(lua_State* L) {
+      if (PRL_HANDLE* data = static_cast<PRL_HANDLE*>(lua_touserdata(L, 1))) {
+        PRL_HANDLE handle = *data;
+        *data = PRL_INVALID_HANDLE;
+        if (handle != PRL_INVALID_HANDLE) {
+          if (get_log_level() > 1) {
+            std::cerr << "[dromozoa-prl] handle " << get_handle_address(handle) << " detected" << std::endl;
+          }
+          PRL_RESULT result = free_handle(handle);
+          if (PRL_FAILED(result)) {
+            if (get_log_level() > 0) {
+              std::cerr << "[dromozoa-prl] cannot free handle " << get_handle_address(handle) << ": ";
+              print_error(std::cerr, result);
+              std::cerr << std::endl;
+            }
+          }
+        }
+      }
+      return 0;
     }
 
     int impl_get_type(lua_State* L) {
@@ -148,6 +148,10 @@ namespace dromozoa {
     }
   }
 
+  void initialize_handle_gc(lua_State* L) {
+    function<impl_gc>::set_field(L, "__gc");
+  }
+
   int open_handle(lua_State* L) {
     lua_newtable(L);
     function<impl_free>::set_field(L, "free");
@@ -157,7 +161,7 @@ namespace dromozoa {
     luaL_newmetatable(L, "dromozoa.prl.handle");
     lua_pushvalue(L, -2);
     lua_setfield(L, -2, "__index");
-    function<gc_handle>::set_field(L, "__gc");
+    initialize_handle_gc(L);
     lua_pop(L, 1);
 
     return 1;

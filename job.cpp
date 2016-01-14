@@ -113,7 +113,7 @@ namespace dromozoa {
     luaL_newmetatable(L, "dromozoa.prl.job");
     lua_pushvalue(L, -2);
     lua_setfield(L, -2, "__index");
-    function<gc_handle>::set_field(L, "__gc");
+    initialize_handle_gc(L);
     lua_pop(L, 1);
 
     return 1;
