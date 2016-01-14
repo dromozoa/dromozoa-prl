@@ -52,7 +52,7 @@ namespace dromozoa {
 
   }
 
-  int open_handle_vm_configuration(lua_State* L) {
+  int open_vm_configuration(lua_State* L) {
     lua_newtable(L);
     function<impl_get_name>::set_field(L, "get_name");
 
