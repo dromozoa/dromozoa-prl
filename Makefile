@@ -32,7 +32,7 @@ OBJS = \
 	handle_result.o \
 	handle_server.o \
 	handle_virtual_machine.o \
-	handle_vm_configuration.o \
+	vm_configuration.o \
 	result.o \
 	sdk_wrap.o \
 	module.o \
