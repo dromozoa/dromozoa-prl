@@ -1,4 +1,4 @@
--- Copyright (C) 2015,2016 Tomoyuki Fujimori <moyu@dromozoa.com>
+-- Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-prl.
 --
@@ -17,26 +17,20 @@
 
 local prl = require "dromozoa.prl"
 
-prl.set_log_level(3)
 prl.set_raise_error(true)
 
-prl.sdk_wrap.load("libprl_sdk.dylib")
+local result, message = pcall(prl.sdk_wrap.unload)
+-- print(result, message)
+assert(not result)
+assert(message == "PRL_RESULT_DECLARE_ERROR(80000007)")
+
+prl.sdk_wrap.load_lib_from_std_paths()
+
+local result, message = pcall(prl.deinit)
+-- print(result, message)
+assert(not result)
+assert(message == "PRL_ERR_API_WASNT_INITIALIZED")
+
 prl.init_ex()
-
-do
-  local server = assert(prl.server.create())
-  server:login_local():wait():check_ret_code():free()
-
-  local job = server:get_vm_list():wait():check_ret_code()
-  -- local vm_list = job:get_result_and_free()
-  local vm_list = job:get_result()
-  -- job:free()
-  print(vm_list:get_params_count())
-  vm_list:free()
-  server:free()
-end
--- collectgarbage()
--- collectgarbage()
-
 prl.deinit()
-prl.sdk_wrap.unload()
+assert(not pcall(prl.deinit))

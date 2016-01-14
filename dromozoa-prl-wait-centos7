@@ -20,7 +20,7 @@
 local sequence = require "dromozoa.commons.sequence"
 local shell = require "dromozoa.commons.shell"
 local image = require "dromozoa.image"
-local nanosleep = require "dromozoa.unix.nanosleep"
+local unix = require "dromozoa.unix"
 
 local data = {
   min_x = 193;
@@ -64,6 +64,6 @@ for i = 1, 10 do
     return
   end
 
-  nanosleep({ tv_sec = 1, tv_nsec = 0 })
+  unix.nanosleep({ tv_sec = 1, tv_nsec = 0 })
 end
 error("timeout")

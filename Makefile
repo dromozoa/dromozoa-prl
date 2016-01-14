@@ -1,4 +1,4 @@
-# Copyright (C) 2015 Tomoyuki Fujimori <moyu@dromozoa.com>
+# Copyright (C) 2015,2016 Tomoyuki Fujimori <moyu@dromozoa.com>
 #
 # This file is part of dromozoa-prl.
 #
@@ -18,25 +18,46 @@
 PRL_SDKDIR = /Library/Frameworks/ParallelsVirtualizationSDK.framework
 PRL_SDKWRAPDIR = $(PRL_SDKDIR)/Libraries/Helpers/SdkWrap
 
-CPPFLAGS = -DDYN_API_WRAP -I$(LUA_INCDIR) -I$(PRL_SDKDIR)/Headers -I$(PRL_SDKWRAPDIR)
-CXXFLAGS = -Wall -W -std=c++11 $(CFLAGS)
+CPPFLAGS = -DDYN_API_WRAP -Ibind -I$(LUA_INCDIR) -I$(PRL_SDKDIR)/Headers -I$(PRL_SDKWRAPDIR)
+CXXFLAGS = -Wall -W $(CFLAGS)
 LDFLAGS = -L$(LUA_LIBDIR) $(LIBFLAG)
 LDLIBS = -ldl
 
 TARGET = prl.so
+OBJS = \
+	bind.o \
+	api.o \
+	error.o \
+	handle.o \
+	enum.o \
+	job.o \
+	result.o \
+	server.o \
+	virtual_machine.o \
+	vm_configuration.o \
+	sdk_wrap.o \
+	key.o \
+	module.o \
+	SdkWrap.o
 
 all: $(TARGET)
 
 clean:
-	rm -f key.hpp *.o $(TARGET)
+	rm -f key.cpp *.o $(TARGET)
 
-prl.so: prl.o SdkWrap.o
+prl.so: $(OBJS)
 	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-key.hpp: $(PRL_SDKDIR)/Headers/PrlKeys.h
+.cpp.o:
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
+
+key.cpp: $(PRL_SDKDIR)/Headers/PrlKeys.h
 	$(LUA) generate_key.lua <$< >$@
 
-prl.o: prl.cpp key.hpp
+bind.o: bind/bind.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
+
+module.o: module.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 SdkWrap.o: $(PRL_SDKWRAPDIR)/SdkWrap.cpp
