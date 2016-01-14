@@ -28,7 +28,7 @@ OBJS = \
 	bind.o \
 	error.o \
 	handle.o \
-	handle_job.o \
+	job.o \
 	handle_result.o \
 	server.o \
 	virtual_machine.o \

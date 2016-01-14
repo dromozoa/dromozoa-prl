@@ -27,8 +27,8 @@ extern "C" {
 #include "dromozoa/bind.hpp"
 
 #include "error.hpp"
+#include "job.hpp"
 #include "handle.hpp"
-#include "result.hpp"
 
 namespace dromozoa {
   using bind::function;
@@ -38,19 +38,38 @@ namespace dromozoa {
     int impl_get_result(lua_State* L) {
       PRL_HANDLE handle = PRL_INVALID_HANDLE;
       PRL_RESULT result = PrlJob_GetResult(get_handle(L, 1), &handle);
-      return push_result(L, result, handle);
+      if (PRL_FAILED(result)) {
+        return push_error(L, result);
+      } else {
+        return new_handle(L, handle);
+      }
     }
 
+    // [TODO] remove
     int impl_get_ret_code(lua_State* L) {
       PRL_RESULT code = PRL_ERR_SUCCESS;
       PRL_RESULT result = PrlJob_GetRetCode(get_handle(L, 1), &code);
-      return push_result(L, result, code);
+      if (PRL_FAILED(result)) {
+        return push_error(L, result);
+      } else {
+        push_error_string(L, code);
+        lua_pushinteger(L, code);
+        return 2;
+      }
     }
 
     int impl_wait(lua_State* L) {
-      return push_result(L, PrlJob_Wait(get_handle(L, 1), luaL_optinteger(L, 2, std::numeric_limits<PRL_UINT32>::max())));
+      PRL_RESULT result = PrlJob_Wait(
+          get_handle(L, 1),
+          luaL_optinteger(L, 2, std::numeric_limits<PRL_UINT32>::max()));
+      if (PRL_FAILED(result)) {
+        return push_error(L, result);
+      } else {
+        return push_success(L);
+      }
     }
 
+    // [TODO] rename
     int impl_check_ret_code(lua_State* L) {
       PRL_RESULT code = PRL_ERR_SUCCESS;
       PRL_RESULT result = PrlJob_GetRetCode(get_handle(L, 1), &code);
@@ -75,8 +94,7 @@ namespace dromozoa {
           PRL_RESULT result = free_handle(*data);
           if (PRL_SUCCEEDED(result)) {
             *data = PRL_INVALID_HANDLE;
-            new_handle(L, handle);
-            return 1;
+            return new_handle(L, handle);
           } else {
             return push_error(L, result);
           }
@@ -89,7 +107,7 @@ namespace dromozoa {
     }
   }
 
-  int open_handle_job(lua_State* L) {
+  int open_job(lua_State* L) {
     lua_newtable(L);
     function<impl_get_result>::set_field(L, "get_result");
     function<impl_get_ret_code>::set_field(L, "get_ret_code");
