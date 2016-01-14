@@ -52,6 +52,9 @@ prl.so: $(OBJS)
 key.hpp: $(PRL_SDKDIR)/Headers/PrlKeys.h
 	$(LUA) generate_key.lua <$< >$@
 
+bind.o: bind/bind.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
+
 module.o: module.cpp key.hpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
