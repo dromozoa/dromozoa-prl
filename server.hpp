@@ -15,15 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef DROMOZOA_HANDLE_SERVER_HPP
-#define DROMOZOA_HANDLE_SERVER_HPP
+#ifndef DROMOZOA_SERVER_HPP
+#define DROMOZOA_SERVER_HPP
 
 extern "C" {
 #include <lua.h>
 }
 
 namespace dromozoa {
-  int open_handle_server(lua_State* L);
+  int open_server(lua_State* L);
 }
 
 #endif

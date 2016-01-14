@@ -30,7 +30,7 @@ OBJS = \
 	handle.o \
 	handle_job.o \
 	handle_result.o \
-	handle_server.o \
+	server.o \
 	virtual_machine.o \
 	vm_configuration.o \
 	result.o \

@@ -45,9 +45,10 @@ namespace dromozoa {
       result = PrlVmCfg_GetName(handle, &buffer[0], &size);
       if (PRL_FAILED(result)) {
         return push_error(L, result);
+      } else {
+        lua_pushstring(L, &buffer[0]);
+        return 1;
       }
-      lua_pushstring(L, &buffer[0]);
-      return 1;
     }
 
   }

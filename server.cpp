@@ -27,8 +27,7 @@ extern "C" {
 #include "enum.hpp"
 #include "error.hpp"
 #include "handle.hpp"
-#include "handle_server.hpp"
-#include "result.hpp"
+#include "server.hpp"
 
 namespace dromozoa {
   using bind::function;
@@ -37,28 +36,46 @@ namespace dromozoa {
     int impl_create(lua_State* L) {
       PRL_HANDLE handle = PRL_INVALID_HANDLE;
       PRL_RESULT result = PrlSrv_Create(&handle);
-      return push_result(L, result, handle);
+      if (PRL_FAILED(result)) {
+        return push_error(L, result);
+      } else {
+        return new_handle(L, handle);
+      }
     }
 
     int impl_get_vm_list(lua_State* L) {
-      return push_result(L, PrlSrv_GetVmList(get_handle(L, 1)));
+      PRL_HANDLE handle = PrlSrv_GetVmList(get_handle(L, 1));
+      if (handle == PRL_INVALID_HANDLE) {
+        return push_error(L, PRL_ERR_INVALID_HANDLE);
+      } else {
+        return new_handle(L, handle);
+      }
     }
 
     int impl_login_local(lua_State* L) {
-      return push_result(L,
-          PrlSrv_LoginLocal(
-              get_handle(L, 1),
-              lua_tostring(L, 2),
-              luaL_optinteger(L, 3, 0),
-              opt_enum(L, 4, PSL_NORMAL_SECURITY)));
+      PRL_HANDLE handle = PrlSrv_LoginLocal(
+          get_handle(L, 1),
+          lua_tostring(L, 2),
+          luaL_optinteger(L, 3, 0),
+          opt_enum(L, 4, PSL_NORMAL_SECURITY));
+      if (handle == PRL_INVALID_HANDLE) {
+        return push_error(L, PRL_ERR_INVALID_HANDLE);
+      } else {
+        return new_handle(L, handle);
+      }
     }
 
     int impl_logoff(lua_State* L) {
-      return push_result(L, PrlSrv_Logoff(get_handle(L, 1)));
+      PRL_HANDLE handle = PrlSrv_Logoff(get_handle(L, 1));
+      if (handle == PRL_INVALID_HANDLE) {
+        return push_error(L, PRL_ERR_INVALID_HANDLE);
+      } else {
+        return new_handle(L, handle);
+      }
     }
   }
 
-  int open_handle_server(lua_State* L) {
+  int open_server(lua_State* L) {
     lua_newtable(L);
     function<impl_create>::set_field(L, "create");
     function<impl_get_vm_list>::set_field(L, "get_vm_list");
