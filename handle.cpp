@@ -28,15 +28,16 @@ extern "C" {
 
 #include "error.hpp"
 #include "handle.hpp"
-#include "result.hpp"
 
 namespace dromozoa {
   using bind::function;
   using bind::get_log_level;
   using bind::push_success;
 
-  lua_Integer get_handle_address(PRL_HANDLE handle) {
-    return reinterpret_cast<lua_Integer>(handle);
+  namespace {
+    lua_Integer get_handle_address(PRL_HANDLE handle) {
+      return reinterpret_cast<lua_Integer>(handle);
+    }
   }
 
   int new_handle(lua_State* L, PRL_HANDLE handle) {
@@ -83,12 +84,10 @@ namespace dromozoa {
 
   PRL_RESULT free_handle(PRL_HANDLE handle) {
     if (PrlHandle_Free) {
-      PRL_HANDLE_TYPE type = PHT_ERROR;
-      PrlHandle_GetType(handle, &type);
       PRL_RESULT result = PrlHandle_Free(handle);
       if (PRL_SUCCEEDED(result)) {
         if (get_log_level() > 2) {
-          std::cerr << "[dromozoa-prl] detach handle " << get_handle_address(handle) << " (" << handle_type_to_string(type) << ")" << std::endl;
+          std::cerr << "[dromozoa-prl] free handle " << get_handle_address(handle) << std::endl;
         }
       }
       return result;

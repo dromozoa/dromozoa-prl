@@ -35,13 +35,14 @@ namespace dromozoa {
   using bind::push_success;
 
   namespace {
-    int impl_get_result(lua_State* L) {
-      PRL_HANDLE handle = PRL_INVALID_HANDLE;
-      PRL_RESULT result = PrlJob_GetResult(get_handle(L, 1), &handle);
+    int impl_wait(lua_State* L) {
+      PRL_RESULT result = PrlJob_Wait(
+          get_handle(L, 1),
+          luaL_optinteger(L, 2, std::numeric_limits<PRL_UINT32>::max()));
       if (PRL_FAILED(result)) {
         return push_error(L, result);
       } else {
-        return new_handle(L, handle);
+        return push_success(L);
       }
     }
 
@@ -70,14 +71,13 @@ namespace dromozoa {
       }
     }
 
-    int impl_wait(lua_State* L) {
-      PRL_RESULT result = PrlJob_Wait(
-          get_handle(L, 1),
-          luaL_optinteger(L, 2, std::numeric_limits<PRL_UINT32>::max()));
+    int impl_get_result(lua_State* L) {
+      PRL_HANDLE handle = PRL_INVALID_HANDLE;
+      PRL_RESULT result = PrlJob_GetResult(get_handle(L, 1), &handle);
       if (PRL_FAILED(result)) {
         return push_error(L, result);
       } else {
-        return push_success(L);
+        return new_handle(L, handle);
       }
     }
 
@@ -101,10 +101,10 @@ namespace dromozoa {
 
   int open_job(lua_State* L) {
     lua_newtable(L);
-    function<impl_get_result>::set_field(L, "get_result");
-    function<impl_get_ret_code>::set_field(L, "get_ret_code");
     function<impl_wait>::set_field(L, "wait");
+    function<impl_get_ret_code>::set_field(L, "get_ret_code");
     function<impl_check_ret_code>::set_field(L, "check_ret_code");
+    function<impl_get_result>::set_field(L, "get_result");
     function<impl_get_result_and_free>::set_field(L, "get_result_and_free");
 
     luaL_getmetatable(L, "dromozoa.prl.handle");
