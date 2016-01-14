@@ -15,15 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef DROMOZOA_HANDLE_VIRTUAL_MACHINE_HPP
-#define DROMOZOA_HANDLE_VIRTUAL_MACHINE_HPP
+#ifndef DROMOZOA_VIRTUAL_MACHINE_HPP
+#define DROMOZOA_VIRTUAL_MACHINE_HPP
 
 extern "C" {
 #include <lua.h>
 }
 
 namespace dromozoa {
-  int open_handle_virtual_machine(lua_State* L);
+  int open_virtual_machine(lua_State* L);
 }
 
 #endif

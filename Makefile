@@ -31,7 +31,7 @@ OBJS = \
 	handle_job.o \
 	handle_result.o \
 	handle_server.o \
-	handle_virtual_machine.o \
+	virtual_machine.o \
 	vm_configuration.o \
 	result.o \
 	sdk_wrap.o \
