@@ -31,7 +31,9 @@ extern "C" {
 #include "result.hpp"
 
 namespace dromozoa {
+  using bind::function;
   using bind::get_log_level;
+  using bind::push_success;
 
   lua_Integer get_handle_address(PRL_HANDLE handle) {
     return reinterpret_cast<lua_Integer>(handle);
@@ -56,7 +58,9 @@ namespace dromozoa {
         name = "dromozoa.prl.virtual_machine";
         break;
       default:
-        break;
+        if (type == PHT_VM_CONFIGURATION) {
+          name = "dromozoa.prl.vm_configuration";
+        }
     }
 
     *static_cast<PRL_HANDLE*>(lua_newuserdata(L, sizeof(PRL_HANDLE))) = handle;
@@ -121,7 +125,7 @@ namespace dromozoa {
         if (PRL_SUCCEEDED(result)) {
           *data = PRL_INVALID_HANDLE;
         }
-        return push_result(L, result);
+        return push_success(L);
       } else {
         return push_error(L, PRL_ERR_INVALID_HANDLE);
       }
@@ -130,6 +134,13 @@ namespace dromozoa {
 
   int open_handle_(lua_State* L) {
     lua_newtable(L);
+    function<impl_free>::set_field(L, "free");
+
+    luaL_newmetatable(L, "dromozoa.prl.handle");
+    lua_pushvalue(L, -2);
+    lua_setfield(L, -2, "__index");
+    function<gc_handle>::set_field(L, "__gc");
+    lua_pop(L, 1);
 
     return 1;
   }
