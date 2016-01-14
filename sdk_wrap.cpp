@@ -24,11 +24,12 @@ extern "C" {
 
 #include "dromozoa/bind.hpp"
 
-#include "result.hpp"
+#include "error.hpp"
 #include "sdk_wrap.hpp"
 
 namespace dromozoa {
   using bind::function;
+  using bind::push_success;
 
   namespace {
     int impl_is_loaded(lua_State* L) {
@@ -37,15 +38,30 @@ namespace dromozoa {
     }
 
     int impl_load(lua_State* L) {
-      return push_result(L, SdkWrap_Load(luaL_checkstring(L, 1), lua_toboolean(L, 2)));
+      PRL_RESULT result = SdkWrap_Load(luaL_checkstring(L, 1), lua_toboolean(L, 2));
+      if (PRL_FAILED(result)) {
+        return push_error(L, result);
+      } else {
+        return push_success(L);
+      }
     }
 
     int impl_load_lib_from_std_paths(lua_State* L) {
-      return push_result(L, SdkWrap_LoadLibFromStdPaths(lua_toboolean(L, 1)));
+      PRL_RESULT result = SdkWrap_LoadLibFromStdPaths(lua_toboolean(L, 2));
+      if (PRL_FAILED(result)) {
+        return push_error(L, result);
+      } else {
+        return push_success(L);
+      }
     }
 
     int impl_unload(lua_State* L) {
-      return push_result(L, SdkWrap_Unload());
+      PRL_RESULT result = SdkWrap_Unload();
+      if (PRL_FAILED(result)) {
+        return push_error(L, result);
+      } else {
+        return push_success(L);
+      }
     }
   }
 

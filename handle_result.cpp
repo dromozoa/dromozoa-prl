@@ -35,17 +35,21 @@ namespace dromozoa {
     int impl_get_param_by_index(lua_State* L) {
       PRL_HANDLE handle = PRL_INVALID_HANDLE;
       PRL_RESULT result = PrlResult_GetParamByIndex(get_handle(L, 1), luaL_checkinteger(L, 2), &handle);
-      return push_result(L, result, handle);
+      if (PRL_FAILED(result)) {
+        return push_error(L, result);
+      } else {
+        return new_handle(L, handle);
+      }
     }
 
     int impl_get_params_count(lua_State* L) {
       PRL_UINT32 count = 0;
       PRL_RESULT result = PrlResult_GetParamsCount(get_handle(L, 1), &count);
-      if (PRL_SUCCEEDED(result)) {
+      if (PRL_FAILED(result)) {
+        return push_error(L, result);
+      } else {
         lua_pushinteger(L, count);
         return 1;
-      } else {
-        return push_error(L, result);
       }
     }
   }
