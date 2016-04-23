@@ -20,8 +20,6 @@
 
 #include <SdkWrap.h>
 
-#include <iosfwd>
-
 #include <dromozoa/bind.hpp>
 
 namespace dromozoa {
@@ -37,7 +35,6 @@ namespace dromozoa {
 
   int push_error_string(lua_State* L, PRL_RESULT result);
   int push_error(lua_State* L, PRL_RESULT result);
-  void print_error(std::ostream& out, PRL_RESULT result);
 }
 
 #endif
