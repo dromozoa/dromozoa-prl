@@ -28,7 +28,7 @@
 namespace dromozoa {
   namespace {
     void impl_get_name(lua_State* L) {
-      PRL_HANDLE handle = get_handle(L, 1);
+      PRL_HANDLE handle = check_handle(L, 1);
       PRL_UINT32 size = 0;
       PRL_RESULT result = PrlVmCfg_GetName(handle, 0, &size);
       if (PRL_FAILED(result)) {

@@ -29,7 +29,7 @@ namespace dromozoa {
   namespace {
     void impl_wait(lua_State* L) {
       PRL_RESULT result = PrlJob_Wait(
-          get_handle(L, 1),
+          check_handle(L, 1),
           luaL_optinteger(L, 2, std::numeric_limits<PRL_UINT32>::max()));
       if (PRL_FAILED(result)) {
         push_error(L, result);
@@ -40,7 +40,7 @@ namespace dromozoa {
 
     void impl_get_ret_code(lua_State* L) {
       PRL_RESULT code = PRL_ERR_SUCCESS;
-      PRL_RESULT result = PrlJob_GetRetCode(get_handle(L, 1), &code);
+      PRL_RESULT result = PrlJob_GetRetCode(check_handle(L, 1), &code);
       if (PRL_FAILED(result)) {
         push_error(L, result);
       } else {
@@ -51,7 +51,7 @@ namespace dromozoa {
 
     void impl_check_ret_code(lua_State* L) {
       PRL_RESULT code = PRL_ERR_SUCCESS;
-      PRL_RESULT result = PrlJob_GetRetCode(get_handle(L, 1), &code);
+      PRL_RESULT result = PrlJob_GetRetCode(check_handle(L, 1), &code);
       if (PRL_FAILED(result)) {
         push_error(L, result);
       }
@@ -64,7 +64,7 @@ namespace dromozoa {
 
     void impl_get_result(lua_State* L) {
       PRL_HANDLE handle = PRL_INVALID_HANDLE;
-      PRL_RESULT result = PrlJob_GetResult(get_handle(L, 1), &handle);
+      PRL_RESULT result = PrlJob_GetResult(check_handle(L, 1), &handle);
       if (PRL_FAILED(result)) {
         push_error(L, result);
       } else {

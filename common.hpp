@@ -35,6 +35,11 @@ namespace dromozoa {
 
   void push_error_string(lua_State* L, PRL_RESULT result);
   void push_error(lua_State* L, PRL_RESULT result);
+
+  PRL_HANDLE check_handle(lua_State* L, int arg);
+  void new_handle(lua_State* L, PRL_HANDLE handle);
+  PRL_RESULT free_handle(PRL_HANDLE handle);
+  void initialize_handle_gc(lua_State* L);
 }
 
 #endif

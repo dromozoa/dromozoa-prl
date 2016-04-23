@@ -37,7 +37,7 @@ namespace dromozoa {
     }
 
     void impl_get_vm_list(lua_State* L) {
-      PRL_HANDLE handle = PrlSrv_GetVmList(get_handle(L, 1));
+      PRL_HANDLE handle = PrlSrv_GetVmList(check_handle(L, 1));
       if (handle == PRL_INVALID_HANDLE) {
         push_error(L, PRL_ERR_INVALID_HANDLE);
       } else {
@@ -47,7 +47,7 @@ namespace dromozoa {
 
     void impl_login_local(lua_State* L) {
       PRL_HANDLE handle = PrlSrv_LoginLocal(
-          get_handle(L, 1),
+          check_handle(L, 1),
           lua_tostring(L, 2),
           luaL_optinteger(L, 3, 0),
           opt_enum(L, 4, PSL_NORMAL_SECURITY));
@@ -59,7 +59,7 @@ namespace dromozoa {
     }
 
     void impl_logoff(lua_State* L) {
-      PRL_HANDLE handle = PrlSrv_Logoff(get_handle(L, 1));
+      PRL_HANDLE handle = PrlSrv_Logoff(check_handle(L, 1));
       if (handle == PRL_INVALID_HANDLE) {
         push_error(L, PRL_ERR_INVALID_HANDLE);
       } else {

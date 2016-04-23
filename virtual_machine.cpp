@@ -28,7 +28,7 @@ namespace dromozoa {
   namespace {
     void impl_connect_to_vm(lua_State* L) {
       PRL_HANDLE handle = PrlDevDisplay_ConnectToVm(
-          get_handle(L, 1),
+          check_handle(L, 1),
           opt_enum(L, 2, PDCT_HIGH_QUALITY_WITHOUT_COMPRESSION));
       if (handle == PRL_INVALID_HANDLE) {
         push_error(L, PRL_ERR_INVALID_HANDLE);
@@ -38,7 +38,7 @@ namespace dromozoa {
     }
 
     void impl_disconnect_from_vm(lua_State* L) {
-      PRL_RESULT result = PrlDevDisplay_DisconnectFromVm(get_handle(L, 1));
+      PRL_RESULT result = PrlDevDisplay_DisconnectFromVm(check_handle(L, 1));
       if (PRL_FAILED(result)) {
         push_error(L, result);
       } else {
@@ -48,7 +48,7 @@ namespace dromozoa {
 
     void impl_get_config(lua_State* L) {
       PRL_HANDLE handle = PRL_INVALID_HANDLE;
-      PRL_RESULT result = PrlVm_GetConfig(get_handle(L, 1), &handle);
+      PRL_RESULT result = PrlVm_GetConfig(check_handle(L, 1), &handle);
       if (PRL_FAILED(result)) {
         push_error(L, result);
       } else {
@@ -58,7 +58,7 @@ namespace dromozoa {
 
     void impl_send_key_event_ex(lua_State* L) {
       PRL_RESULT result = PrlDevKeyboard_SendKeyEventEx(
-          get_handle(L, 1),
+          check_handle(L, 1),
           check_enum<PRL_KEY>(L, 2),
           check_enum<PRL_KEY_EVENT>(L, 3));
       if (PRL_FAILED(result)) {
@@ -70,7 +70,7 @@ namespace dromozoa {
 
     void impl_send_key_pressed_and_released(lua_State* L) {
       PRL_RESULT result = PrlDevKeyboard_SendKeyPressedAndReleased(
-          get_handle(L, 1),
+          check_handle(L, 1),
           check_enum<PRL_KEY>(L, 2));
       if (PRL_FAILED(result)) {
         push_error(L, result);

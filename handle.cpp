@@ -15,14 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <SdkWrap.h>
-
-#include <iostream>
-
-#include <dromozoa/bind.hpp>
-
-#include "error.hpp"
-#include "handle.hpp"
+#include "common.hpp"
 
 namespace dromozoa {
   namespace {
@@ -55,13 +48,12 @@ namespace dromozoa {
         }
     }
 
-    *static_cast<PRL_HANDLE*>(lua_newuserdata(L, sizeof(PRL_HANDLE))) = handle;
-    luaL_getmetatable(L, name);
-    lua_setmetatable(L, -2);
+    luaX_new<PRL_HANDLE>(L, handle);
+    luaX_set_metatable(L, name);
   }
 
-  PRL_HANDLE get_handle(lua_State* L, int n) {
-    if (PRL_HANDLE* data = static_cast<PRL_HANDLE*>(lua_touserdata(L, n))) {
+  PRL_HANDLE check_handle(lua_State* L, int arg) {
+    if (PRL_HANDLE* data = static_cast<PRL_HANDLE*>(lua_touserdata(L, arg))) {
       return *data;
     } else {
       return PRL_INVALID_HANDLE;
@@ -100,7 +92,7 @@ namespace dromozoa {
 
     void impl_get_type(lua_State* L) {
       PRL_HANDLE_TYPE type = PHT_ERROR;
-      PRL_RESULT result = PrlHandle_GetType(get_handle(L, 1), &type);
+      PRL_RESULT result = PrlHandle_GetType(check_handle(L, 1), &type);
       if (PRL_FAILED(result)) {
         push_error(L, result);
       } else {
@@ -110,7 +102,7 @@ namespace dromozoa {
     }
 
     void impl_get_address(lua_State* L) {
-      lua_pushinteger(L, get_handle_address(get_handle(L, 1)));
+      lua_pushinteger(L, get_handle_address(check_handle(L, 1)));
     }
   }
 

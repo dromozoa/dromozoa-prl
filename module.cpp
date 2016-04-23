@@ -25,7 +25,6 @@
 
 #include <dromozoa/bind.hpp>
 
-#include "handle.hpp"
 #include "result.hpp"
 #include "job.hpp"
 #include "error.hpp"
@@ -38,6 +37,7 @@ namespace dromozoa {
   void initialize_api(lua_State* L);
   void initialize_enum(lua_State* L);
   void initialize_key(lua_State* L);
+  void open_handle(lua_State* L);
 
   inline void initialize_core(lua_State* L) {
     open_handle(L);
