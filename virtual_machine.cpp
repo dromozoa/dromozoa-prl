@@ -15,14 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
-extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
-}
-
 #include <SdkWrap.h>
 
-#include "dromozoa/bind.hpp"
+#include <dromozoa/bind.hpp>
 
 #include "enum.hpp"
 #include "error.hpp"
@@ -30,71 +25,68 @@ extern "C" {
 #include "virtual_machine.hpp"
 
 namespace dromozoa {
-  using bind::function;
-  using bind::push_success;
-
   namespace {
-    int impl_connect_to_vm(lua_State* L) {
+    void impl_connect_to_vm(lua_State* L) {
       PRL_HANDLE handle = PrlDevDisplay_ConnectToVm(
           get_handle(L, 1),
           opt_enum(L, 2, PDCT_HIGH_QUALITY_WITHOUT_COMPRESSION));
       if (handle == PRL_INVALID_HANDLE) {
-        return push_error(L, PRL_ERR_INVALID_HANDLE);
+        push_error(L, PRL_ERR_INVALID_HANDLE);
       } else {
-        return new_handle(L, handle);
+        new_handle(L, handle);
       }
     }
 
-    int impl_disconnect_from_vm(lua_State* L) {
+    void impl_disconnect_from_vm(lua_State* L) {
       PRL_RESULT result = PrlDevDisplay_DisconnectFromVm(get_handle(L, 1));
       if (PRL_FAILED(result)) {
-        return push_error(L, result);
+        push_error(L, result);
       } else {
-        return push_success(L);
+        luaX_push_success(L);
       }
     }
 
-    int impl_get_config(lua_State* L) {
+    void impl_get_config(lua_State* L) {
       PRL_HANDLE handle = PRL_INVALID_HANDLE;
       PRL_RESULT result = PrlVm_GetConfig(get_handle(L, 1), &handle);
       if (PRL_FAILED(result)) {
-        return push_error(L, result);
+        push_error(L, result);
       } else {
-        return new_handle(L, handle);
+        new_handle(L, handle);
       }
     }
 
-    int impl_send_key_event_ex(lua_State* L) {
+    void impl_send_key_event_ex(lua_State* L) {
       PRL_RESULT result = PrlDevKeyboard_SendKeyEventEx(
           get_handle(L, 1),
           check_enum<PRL_KEY>(L, 2),
           check_enum<PRL_KEY_EVENT>(L, 3));
       if (PRL_FAILED(result)) {
-        return push_error(L, result);
+        push_error(L, result);
       } else {
-        return push_success(L);
+        luaX_push_success(L);
       }
     }
 
-    int impl_send_key_pressed_and_released(lua_State* L) {
+    void impl_send_key_pressed_and_released(lua_State* L) {
       PRL_RESULT result = PrlDevKeyboard_SendKeyPressedAndReleased(
           get_handle(L, 1),
           check_enum<PRL_KEY>(L, 2));
       if (PRL_FAILED(result)) {
-        return push_error(L, result);
+        push_error(L, result);
       } else {
-        return push_success(L);
+        luaX_push_success(L);
       }
     }
   }
 
-  int open_virtual_machine(lua_State* L) {
+  void open_virtual_machine(lua_State* L) {
     lua_newtable(L);
-    function<impl_connect_to_vm>::set_field(L, "connect_to_vm");
-    function<impl_disconnect_from_vm>::set_field(L, "disconnect_from_vm");
-    function<impl_get_config>::set_field(L, "get_config");
-    function<impl_send_key_event_ex>::set_field(L, "send_key_event_ex");
-    function<impl_send_key_pressed_and_released>::set_field(L, "send_key_pressed_and_released");
+    luaX_set_field(L, -1, "connect_to_vm", impl_connect_to_vm);
+    luaX_set_field(L, -1, "disconnect_from_vm", impl_disconnect_from_vm);
+    luaX_set_field(L, -1, "get_config", impl_get_config);
+    luaX_set_field(L, -1, "send_key_event_ex", impl_send_key_event_ex);
+    luaX_set_field(L, -1, "send_key_pressed_and_released", impl_send_key_pressed_and_released);
 
     if (PHT_VIRTUAL_MACHINE == PHT_VM_CONFIGURATION) {
       luaL_getmetatable(L, "dromozoa.prl.vm_configuration");
@@ -108,7 +100,5 @@ namespace dromozoa {
     lua_setfield(L, -2, "__index");
     initialize_handle_gc(L);
     lua_pop(L, 1);
-
-    return 1;
   }
 }

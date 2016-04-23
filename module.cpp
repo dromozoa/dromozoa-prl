@@ -15,11 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
-extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
-}
-
 #include <SdkWrap.h>
 
 #include <iostream>
@@ -28,7 +23,7 @@ extern "C" {
 #include <string>
 #include <vector>
 
-#include "dromozoa/bind.hpp"
+#include <dromozoa/bind.hpp>
 
 #include "api.hpp"
 #include "enum.hpp"
@@ -42,12 +37,7 @@ extern "C" {
 #include "sdk_wrap.hpp"
 
 namespace dromozoa {
-  using bind::function;
-  using bind::get_log_level;
-  using bind::push_success;
-  using bind::set_field;
-
-  int open_key(lua_State* L);
+  void initialize_key(lua_State* L);
 
   inline void initialize_core(lua_State* L) {
     open_handle(L);
@@ -68,7 +58,7 @@ namespace dromozoa {
     open_virtual_machine(L);
     lua_setfield(L, -2, "virtual_machine");
 
-    open_key(L);
+    initialize_key(L);
     lua_setfield(L, -2, "key");
   }
 
@@ -78,7 +68,6 @@ namespace dromozoa {
     open_sdk_wrap(L);
     lua_setfield(L, -2, "sdk_wrap");
 
-    bind::initialize(L);
     initialize_api(L);
     initialize_core(L);
     initialize_enum(L);

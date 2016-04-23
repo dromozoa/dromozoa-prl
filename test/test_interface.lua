@@ -17,9 +17,6 @@
 
 local prl = require "dromozoa.prl"
 
-prl.set_log_level(3)
-prl.set_raise_error(true)
-
 prl.sdk_wrap.load("libprl_sdk.dylib")
 prl.init_ex()
 

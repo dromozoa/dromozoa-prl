@@ -25,11 +25,11 @@ extern "C" {
 #include <PrlTypes.h>
 
 namespace dromozoa {
-  int new_handle(lua_State* L, PRL_HANDLE handle);
+  void new_handle(lua_State* L, PRL_HANDLE handle);
   PRL_HANDLE get_handle(lua_State* L, int n);
   PRL_RESULT free_handle(PRL_HANDLE handle);
   void initialize_handle_gc(lua_State* L);
-  int open_handle(lua_State* L);
+  void open_handle(lua_State* L);
 }
 
 #endif

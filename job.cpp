@@ -15,11 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
-extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
-}
-
 #include <SdkWrap.h>
 
 #include <limits>
@@ -31,81 +26,77 @@ extern "C" {
 #include "handle.hpp"
 
 namespace dromozoa {
-  using bind::function;
-  using bind::push_success;
-
   namespace {
-    int impl_wait(lua_State* L) {
+    void impl_wait(lua_State* L) {
       PRL_RESULT result = PrlJob_Wait(
           get_handle(L, 1),
           luaL_optinteger(L, 2, std::numeric_limits<PRL_UINT32>::max()));
       if (PRL_FAILED(result)) {
-        return push_error(L, result);
+        push_error(L, result);
       } else {
-        return push_success(L);
+        luaX_push_success(L);
       }
     }
 
-    int impl_get_ret_code(lua_State* L) {
+    void impl_get_ret_code(lua_State* L) {
       PRL_RESULT code = PRL_ERR_SUCCESS;
       PRL_RESULT result = PrlJob_GetRetCode(get_handle(L, 1), &code);
       if (PRL_FAILED(result)) {
-        return push_error(L, result);
+        push_error(L, result);
       } else {
         push_error_string(L, code);
         lua_pushinteger(L, code);
-        return 2;
       }
     }
 
-    int impl_check_ret_code(lua_State* L) {
+    void impl_check_ret_code(lua_State* L) {
       PRL_RESULT code = PRL_ERR_SUCCESS;
       PRL_RESULT result = PrlJob_GetRetCode(get_handle(L, 1), &code);
       if (PRL_FAILED(result)) {
-        return push_error(L, result);
+        push_error(L, result);
       }
       if (PRL_FAILED(code)) {
-        return push_error(L, code);
+        push_error(L, code);
       } else {
-        return push_success(L);
+        luaX_push_success(L);
       }
     }
 
-    int impl_get_result(lua_State* L) {
+    void impl_get_result(lua_State* L) {
       PRL_HANDLE handle = PRL_INVALID_HANDLE;
       PRL_RESULT result = PrlJob_GetResult(get_handle(L, 1), &handle);
       if (PRL_FAILED(result)) {
-        return push_error(L, result);
+        push_error(L, result);
       } else {
-        return new_handle(L, handle);
+        new_handle(L, handle);
       }
     }
 
-    int impl_get_result_and_free(lua_State* L) {
+    void impl_get_result_and_free(lua_State* L) {
       if (PRL_HANDLE* data = static_cast<PRL_HANDLE*>(lua_touserdata(L, 1))) {
         PRL_HANDLE handle = PRL_INVALID_HANDLE;
         PRL_RESULT result = PrlJob_GetResult(*data, &handle);
         if (PRL_FAILED(result)) {
-          return push_error(L, result);
+          push_error(L, result);
         }
         result = free_handle(*data);
         if (PRL_SUCCEEDED(result)) {
           *data = PRL_INVALID_HANDLE;
         }
-        return new_handle(L, handle);
+        new_handle(L, handle);
       } else {
-        return push_error(L, PRL_ERR_INVALID_HANDLE);
+        push_error(L, PRL_ERR_INVALID_HANDLE);
       }
     }
   }
 
   int open_job(lua_State* L) {
     lua_newtable(L);
-    function<impl_wait>::set_field(L, "wait");
-    function<impl_get_ret_code>::set_field(L, "get_ret_code");
-    function<impl_check_ret_code>::set_field(L, "check_ret_code");
-    function<impl_get_result>::set_field(L, "get_result");
-    function<impl_get_result_and_free>::set_field(L, "get_result_and_free");
+    luaX_set_field(L, -1, "wait", impl_wait);
+    luaX_set_field(L, -1, "get_ret_code", impl_get_ret_code);
+    luaX_set_field(L, -1, "check_ret_code", impl_check_ret_code);
+    luaX_set_field(L, -1, "get_result", impl_get_result);
+    luaX_set_field(L, -1, "get_result_and_free", impl_get_result_and_free);
 
     luaL_getmetatable(L, "dromozoa.prl.handle");
     lua_setmetatable(L, -2);

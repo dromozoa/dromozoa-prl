@@ -23,7 +23,7 @@ extern "C" {
 }
 
 namespace dromozoa {
-  int open_vm_configuration(lua_State* L);
+  void open_vm_configuration(lua_State* L);
 }
 
 #endif

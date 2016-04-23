@@ -15,49 +15,41 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
-extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
-}
-
 #include <SdkWrap.h>
 
-#include "dromozoa/bind.hpp"
+#include <dromozoa/bind.hpp>
 
 #include "api.hpp"
 #include "enum.hpp"
 #include "error.hpp"
 
 namespace dromozoa {
-  using bind::function;
-  using bind::push_success;
-
   namespace {
-    int impl_init_ex(lua_State* L) {
+    void impl_init_ex(lua_State* L) {
       PRL_RESULT result = PrlApi_InitEx(
           luaL_optinteger(L, 1, PARALLELS_API_VER),
           opt_enum(L, 2, PAM_DESKTOP),
           luaL_optinteger(L, 3, 0),
           luaL_optinteger(L, 4, 0));
       if (PRL_FAILED(result)) {
-        return push_error(L, result);
+        push_error(L, result);
       } else {
-        return push_success(L);
+        luaX_push_success(L);
       }
     }
 
-    int impl_deinit(lua_State* L) {
+    void impl_deinit(lua_State* L) {
       PRL_RESULT result = PrlApi_Deinit();
       if (PRL_FAILED(result)) {
-        return push_error(L, result);
+        push_error(L, result);
       } else {
-        return push_success(L);
+        luaX_push_success(L);
       }
     }
   }
 
   void initialize_api(lua_State* L) {
-    function<impl_init_ex>::set_field(L, "init_ex");
-    function<impl_deinit>::set_field(L, "deinit");
+    luaX_set_field(L, -1, "init_ex", impl_init_ex);
+    luaX_set_field(L, -1, "deinit", impl_deinit);
   }
 }

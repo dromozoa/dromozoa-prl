@@ -15,32 +15,23 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
-extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
-}
-
 #include <SdkWrap.h>
 
 #include <iostream>
 
-#include "dromozoa/bind.hpp"
+#include <dromozoa/bind.hpp>
 
 #include "error.hpp"
 #include "handle.hpp"
 
 namespace dromozoa {
-  using bind::function;
-  using bind::get_log_level;
-  using bind::push_success;
-
   namespace {
     lua_Integer get_handle_address(PRL_HANDLE handle) {
       return reinterpret_cast<lua_Integer>(handle);
     }
   }
 
-  int new_handle(lua_State* L, PRL_HANDLE handle) {
+  void new_handle(lua_State* L, PRL_HANDLE handle) {
     PRL_HANDLE_TYPE type = PHT_ERROR;
     PrlHandle_GetType(handle, &type);
 
@@ -67,11 +58,6 @@ namespace dromozoa {
     *static_cast<PRL_HANDLE*>(lua_newuserdata(L, sizeof(PRL_HANDLE))) = handle;
     luaL_getmetatable(L, name);
     lua_setmetatable(L, -2);
-    if (get_log_level() > 2) {
-      std::cerr << "[dromozoa-prl] new handle " << get_handle_address(handle) << " (" << handle_type_to_string(type) << ")" << std::endl;
-    }
-
-    return 1;
   }
 
   PRL_HANDLE get_handle(lua_State* L, int n) {
@@ -86,9 +72,6 @@ namespace dromozoa {
     if (PrlHandle_Free) {
       PRL_RESULT result = PrlHandle_Free(handle);
       if (PRL_SUCCEEDED(result)) {
-        if (get_log_level() > 2) {
-          std::cerr << "[dromozoa-prl] free handle " << get_handle_address(handle) << std::endl;
-        }
       }
       return result;
     } else {
@@ -97,73 +80,54 @@ namespace dromozoa {
   }
 
   namespace {
-    int impl_free(lua_State* L) {
+    void impl_free(lua_State* L) {
       if (PRL_HANDLE* data = static_cast<PRL_HANDLE*>(lua_touserdata(L, 1))) {
         PRL_RESULT result = free_handle(*data);
         if (PRL_SUCCEEDED(result)) {
           *data = PRL_INVALID_HANDLE;
         }
-        return push_success(L);
+        luaX_push_success(L);
       } else {
-        return push_error(L, PRL_ERR_INVALID_HANDLE);
+        push_error(L, PRL_ERR_INVALID_HANDLE);
       }
     }
 
-    int impl_gc(lua_State* L) {
+    void impl_gc(lua_State* L) {
       if (PRL_HANDLE* data = static_cast<PRL_HANDLE*>(lua_touserdata(L, 1))) {
-        PRL_HANDLE handle = *data;
         *data = PRL_INVALID_HANDLE;
-        if (handle != PRL_INVALID_HANDLE) {
-          if (get_log_level() > 1) {
-            std::cerr << "[dromozoa-prl] handle " << get_handle_address(handle) << " detected" << std::endl;
-          }
-          PRL_RESULT result = free_handle(handle);
-          if (PRL_FAILED(result)) {
-            if (get_log_level() > 0) {
-              std::cerr << "[dromozoa-prl] cannot free handle " << get_handle_address(handle) << ": ";
-              print_error(std::cerr, result);
-              std::cerr << std::endl;
-            }
-          }
-        }
       }
-      return 0;
     }
 
-    int impl_get_type(lua_State* L) {
+    void impl_get_type(lua_State* L) {
       PRL_HANDLE_TYPE type = PHT_ERROR;
       PRL_RESULT result = PrlHandle_GetType(get_handle(L, 1), &type);
       if (PRL_FAILED(result)) {
-        return push_error(L, result);
+        push_error(L, result);
       } else {
         lua_pushstring(L, handle_type_to_string(type));
         lua_pushinteger(L, type);
-        return 2;
       }
     }
 
-    int impl_get_address(lua_State* L) {
+    void impl_get_address(lua_State* L) {
       lua_pushinteger(L, get_handle_address(get_handle(L, 1)));
-      return 1;
     }
   }
 
   void initialize_handle_gc(lua_State* L) {
-    function<impl_gc>::set_field(L, "__gc");
+    luaX_set_field(L, -1, "__gc", impl_gc);
   }
 
-  int open_handle(lua_State* L) {
+  void open_handle(lua_State* L) {
     lua_newtable(L);
-    function<impl_free>::set_field(L, "free");
-    function<impl_get_type>::set_field(L, "get_type");
-    function<impl_get_address>::set_field(L, "get_address");
+    luaX_set_field(L, -1, "free", impl_free);
+    luaX_set_field(L, -1, "get_type", impl_get_type);
+    luaX_set_field(L, -1, "get_address", impl_get_address);
 
     luaL_newmetatable(L, "dromozoa.prl.handle");
     lua_pushvalue(L, -2);
     lua_setfield(L, -2, "__index");
     initialize_handle_gc(L);
     lua_pop(L, 1);
-
-    return 1;
   }
 }

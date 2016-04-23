@@ -34,25 +34,19 @@ data:sort(function (a, b)
   return a[2] < b[2]
 end)
 io.write([[
-extern "C" {
-#include <lua.h>
-}
-
 #include <SdkWrap.h>
 
 #include "dromozoa/bind.hpp"
 
 namespace dromozoa {
-  using bind::set_field;
-  int open_key(lua_State* L) {
+  void initialize_key(lua_State* L) {
     lua_newtable(L);
 ]])
 for item in data:each() do
   local k = item[1]
-  io.write("    set_field(L, \"", k:gsub("^PRL_KEY_", ""), "\", ", k, ");\n")
+  io.write("    luaX_set_field<lua_Integer>(L, -1, \"", k:gsub("^PRL_KEY_", ""), "\", ", k, ");\n")
 end
 io.write([[
-    return 1;
   }
 }
 ]])

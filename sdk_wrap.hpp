@@ -23,7 +23,7 @@ extern "C" {
 }
 
 namespace dromozoa {
-  int open_sdk_wrap(lua_State* L);
+  void open_sdk_wrap(lua_State* L);
 }
 
 #endif
