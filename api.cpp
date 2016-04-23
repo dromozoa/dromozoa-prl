@@ -22,7 +22,7 @@ namespace dromozoa {
     void impl_init_ex(lua_State* L) {
       PRL_RESULT result = PrlApi_InitEx(
           luaX_opt_integer<PRL_UINT32>(L, 1, PARALLELS_API_VER),
-          opt_enum(L, 2, PAM_DESKTOP),
+          luaX_opt_enum(L, 2, PAM_DESKTOP),
           luaX_opt_integer<PRL_UINT32>(L, 3, 0),
           luaX_opt_integer<PRL_UINT32>(L, 4, 0));
       if (PRL_FAILED(result)) {

@@ -15,41 +15,32 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
-extern "C" {
-#include <lua.h>
-}
+#include <sstream>
 
-#include <SdkWrap.h>
-
-#include <stdio.h>
-
-#include "error.hpp"
+#include "common.hpp"
 
 namespace dromozoa {
-  int push_error_string(lua_State* L, PRL_RESULT result) {
+  void push_error_string(lua_State* L, PRL_RESULT result) {
     const char* string = 0;
     if (PrlDbg_PrlResultToString) {
       PrlDbg_PrlResultToString(result, &string);
     }
     if (string) {
-      lua_pushstring(L, string);
+      luaX_push(L, string);
     } else {
       if (PRL_SUCCEEDED(result)) {
         lua_pushfstring(L, "PRL_RESULT_DECLARE_SUCCESS(%d)", result);
       } else {
-        enum { size = sizeof(PRL_RESULT) * 2 + 1 };
-        char buffer[size] = { '\0' };
-        snprintf(buffer, size, "%x", result);
-        lua_pushfstring(L, "PRL_RESULT_DECLARE_ERROR(%s)", buffer);
+        std::ostringstream out;
+        out << std::hex << "PRL_RESULT_DECLARE_ERROR(" << result << ")";
+        luaX_push(L, out.str());
       }
     }
-    return 1;
   }
 
-  int push_error(lua_State* L, PRL_RESULT result) {
-    lua_pushnil(L);
+  void push_error(lua_State* L, PRL_RESULT result) {
+    luaX_push(L, luaX_nil);
     push_error_string(L, result);
-    lua_pushinteger(L, result);
-    return 3;
+    luaX_push(L, result);
   }
 }

@@ -25,16 +25,16 @@
 namespace dromozoa {
   template <class T>
   inline T check_enum(lua_State* L, int n) {
-    return static_cast<T>(luaL_checkinteger(L, n));
+    return luaX_check_enum<T>(L, n);
   }
 
   template <class T>
   inline T opt_enum(lua_State* L, int n, T d) {
-    return static_cast<T>(luaL_optinteger(L, n, d));
+    return luaX_opt_enum<T>(L, n, d);
   }
 
-  int push_error_string(lua_State* L, PRL_RESULT result);
-  int push_error(lua_State* L, PRL_RESULT result);
+  void push_error_string(lua_State* L, PRL_RESULT result);
+  void push_error(lua_State* L, PRL_RESULT result);
 }
 
 #endif

@@ -15,21 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <SdkWrap.h>
-
-#include <dromozoa/bind.hpp>
+#include "common.hpp"
 
 namespace dromozoa {
-  namespace detail {
-    lua_Integer check_enum(lua_State* L, int n) {
-      return luaL_checkinteger(L, n);
-    }
-
-    lua_Integer opt_enum(lua_State* L, int n, lua_Integer d) {
-      return luaL_optinteger(L, n, d);
-    }
-  }
-
   void initialize_enum(lua_State* L) {
     // PRL_API_COMMAND_FLAGS
     luaX_set_field<lua_Integer>(L, -1, "PACF_NORMAL_SECURITY", PACF_NORMAL_SECURITY);
