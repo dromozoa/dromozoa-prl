@@ -15,15 +15,29 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef DROMOZOA_API_HPP
-#define DROMOZOA_API_HPP
+#ifndef DROMOZOA_COMMON_HPP
+#define DROMOZOA_COMMON_HPP
 
-extern "C" {
-#include <lua.h>
-}
+#include <SdkWrap.h>
+
+#include <iosfwd>
+
+#include <dromozoa/bind.hpp>
 
 namespace dromozoa {
-  void initialize_api(lua_State* L);
+  template <class T>
+  inline T check_enum(lua_State* L, int n) {
+    return static_cast<T>(luaL_checkinteger(L, n));
+  }
+
+  template <class T>
+  inline T opt_enum(lua_State* L, int n, T d) {
+    return static_cast<T>(luaL_optinteger(L, n, d));
+  }
+
+  int push_error_string(lua_State* L, PRL_RESULT result);
+  int push_error(lua_State* L, PRL_RESULT result);
+  void print_error(std::ostream& out, PRL_RESULT result);
 }
 
 #endif

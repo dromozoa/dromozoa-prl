@@ -15,22 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <SdkWrap.h>
-
-#include <dromozoa/bind.hpp>
-
-#include "api.hpp"
-#include "enum.hpp"
-#include "error.hpp"
+#include "common.hpp"
 
 namespace dromozoa {
   namespace {
     void impl_init_ex(lua_State* L) {
       PRL_RESULT result = PrlApi_InitEx(
-          luaL_optinteger(L, 1, PARALLELS_API_VER),
+          luaX_opt_integer<PRL_UINT32>(L, 1, PARALLELS_API_VER),
           opt_enum(L, 2, PAM_DESKTOP),
-          luaL_optinteger(L, 3, 0),
-          luaL_optinteger(L, 4, 0));
+          luaX_opt_integer<PRL_UINT32>(L, 3, 0),
+          luaX_opt_integer<PRL_UINT32>(L, 4, 0));
       if (PRL_FAILED(result)) {
         push_error(L, result);
       } else {
