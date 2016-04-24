@@ -38,6 +38,7 @@ namespace dromozoa {
   void initialize_enum(lua_State* L);
   void initialize_key(lua_State* L);
   void open_handle(lua_State* L);
+  void initialize_result(lua_State* L);
 
   inline void initialize_core(lua_State* L) {
     open_handle(L);
@@ -46,8 +47,7 @@ namespace dromozoa {
     open_job(L);
     lua_setfield(L, -2, "job");
 
-    open_result(L);
-    lua_setfield(L, -2, "result");
+    initialize_result(L);
 
     open_server(L);
     lua_setfield(L, -2, "server");

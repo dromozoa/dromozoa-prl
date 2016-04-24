@@ -18,12 +18,6 @@
 #ifndef DROMOZOA_RESULT_HPP
 #define DROMOZOA_RESULT_HPP
 
-extern "C" {
-#include <lua.h>
-}
-
-namespace dromozoa {
-  void open_result(lua_State* L);
-}
+#include "common.hpp"
 
 #endif

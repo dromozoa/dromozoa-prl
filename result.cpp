@@ -21,7 +21,6 @@
 
 #include "error.hpp"
 #include "handle.hpp"
-#include "result.hpp"
 
 namespace dromozoa {
   namespace {
@@ -47,18 +46,26 @@ namespace dromozoa {
     }
   }
 
-  void open_result(lua_State* L) {
+  void initialize_result(lua_State* L) {
     lua_newtable(L);
-    luaX_set_field(L, -1, "get_param_by_index", impl_get_param_by_index);
-    luaX_set_field(L, -1, "get_params_count", impl_get_params_count);
+    {
+      luaL_newmetatable(L, "dromozoa.prl.result");
+      lua_pushvalue(L, -2);
+      lua_setfield(L, -2, "__index");
+      initialize_handle_gc(L);
+      lua_pop(L, 1);
 
-    luaL_getmetatable(L, "dromozoa.prl.handle");
-    lua_setmetatable(L, -2);
+      luaX_set_field(L, -1, "get_param_by_index", impl_get_param_by_index);
+      luaX_set_field(L, -1, "get_params_count", impl_get_params_count);
 
-    luaL_newmetatable(L, "dromozoa.prl.result");
-    lua_pushvalue(L, -2);
-    lua_setfield(L, -2, "__index");
-    initialize_handle_gc(L);
-    lua_pop(L, 1);
+      luaL_getmetatable(L, "dromozoa.prl.handle");
+      lua_setmetatable(L, -2);
+
+      // luaL_getmetatable(L, "dromozoa.prl.handle");
+      // luaX_get_field(L, -1, "__index");
+      // luaX_set_metafield(L, -3);
+      // lua_pop(L, 1);
+    }
+    luaX_set_field(L, -2, "result");
   }
 }

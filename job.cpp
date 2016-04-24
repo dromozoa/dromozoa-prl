@@ -30,7 +30,7 @@ namespace dromozoa {
     void impl_wait(lua_State* L) {
       PRL_RESULT result = PrlJob_Wait(
           check_handle(L, 1),
-          luaL_optinteger(L, 2, std::numeric_limits<PRL_UINT32>::max()));
+          luaX_opt_integer<PRL_UINT32>(L, 2, std::numeric_limits<PRL_UINT32>::max()));
       if (PRL_FAILED(result)) {
         push_error(L, result);
       } else {

@@ -52,14 +52,6 @@ namespace dromozoa {
     luaX_set_metatable(L, name);
   }
 
-  PRL_HANDLE check_handle(lua_State* L, int arg) {
-    if (PRL_HANDLE* data = luaX_to_udata<PRL_HANDLE>(L, arg, "dromozoa.prl.job", "dromozoa.prl.result", "dromozoa.prl.server", "dromozoa.prl.virtual_machine")) {
-      return *data;
-    } else {
-      return *luaX_check_udata<PRL_HANDLE>(L, arg, "dromozoa.prl.vm_configuration", "dromozoa.prl.handle");
-    }
-  }
-
   PRL_RESULT free_handle(PRL_HANDLE handle) {
     if (PrlHandle_Free) {
       PRL_RESULT result = PrlHandle_Free(handle);
@@ -69,6 +61,16 @@ namespace dromozoa {
     } else {
       return PRL_ERR_UNINITIALIZED;
     }
+  }
+
+  PRL_HANDLE check_handle(lua_State* L, int arg) {
+    return *luaX_check_udata<PRL_HANDLE>(L, arg,
+        "dromozoa.prl.job",
+        "dromozoa.prl.result",
+        "dromozoa.prl.server",
+        "dromozoa.prl.virtual_machine",
+        "dromozoa.prl.vm_configuration",
+        "dromozoa.prl.handle");
   }
 
   namespace {
