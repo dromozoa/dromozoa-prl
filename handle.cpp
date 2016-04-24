@@ -112,16 +112,35 @@ namespace dromozoa {
     luaX_set_field(L, -1, "__gc", impl_gc);
   }
 
-  void open_handle(lua_State* L) {
-    lua_newtable(L);
-    luaX_set_field(L, -1, "free", impl_free);
-    luaX_set_field(L, -1, "get_type", impl_get_type);
-    luaX_set_field(L, -1, "get_address", impl_get_address);
+  void inherit_handle(lua_State* L, const char* name) {
+    inherit_handle(L, name, "dromozoa.prl.handle");
+  }
 
-    luaL_newmetatable(L, "dromozoa.prl.handle");
-    lua_pushvalue(L, -2);
-    lua_setfield(L, -2, "__index");
-    initialize_handle_gc(L);
-    lua_pop(L, 1);
+  void inherit_handle(lua_State* L, const char* name, const char* super) {
+    luaL_getmetatable(L, super);
+    luaX_get_field(L, -1, "__index");
+    luaX_set_metafield(L, -3, "__index");
+    luaL_newmetatable(L, name);
+    lua_pushvalue(L, -3);
+    luaX_set_field(L, -2, "__index");
+    luaX_get_field(L, -2, "__gc");
+    luaX_set_field(L, -2, "__gc");
+    lua_pop(L, 2);
+  }
+
+  void initialize_handle(lua_State* L) {
+    lua_newtable(L);
+    {
+      luaL_newmetatable(L, "dromozoa.prl.handle");
+      lua_pushvalue(L, -2);
+      luaX_set_field(L, -2, "__index");
+      luaX_set_field(L, -1, "__gc", impl_gc);
+      lua_pop(L, 1);
+
+      luaX_set_field(L, -1, "free", impl_free);
+      luaX_set_field(L, -1, "get_type", impl_get_type);
+      luaX_set_field(L, -1, "get_address", impl_get_address);
+    }
+    luaX_set_field(L, -2, "handle");
   }
 }

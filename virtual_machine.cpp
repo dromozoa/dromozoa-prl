@@ -77,18 +77,10 @@ namespace dromozoa {
     lua_newtable(L);
     {
       if (PHT_VIRTUAL_MACHINE == PHT_VM_CONFIGURATION) {
-        luaL_getmetatable(L, "dromozoa.prl.vm_configuration");
+        inherit_handle(L, "dromozoa.prl.virtual_machine", "dromozoa.prl.vm_configuration");
       } else {
-        luaL_getmetatable(L, "dromozoa.prl.handle");
+        inherit_handle(L, "dromozoa.prl.virtual_machine");
       }
-      luaX_get_field(L, -1, "__index");
-      luaX_set_metafield(L, -3, "__index");
-      luaL_newmetatable(L, "dromozoa.prl.virtual_machine");
-      lua_pushvalue(L, -3);
-      luaX_set_field(L, -2, "__index");
-      luaX_get_field(L, -2, "__gc");
-      luaX_set_field(L, -2, "__gc");
-      lua_pop(L, 2);
 
       luaX_set_field(L, -1, "connect_to_vm", impl_connect_to_vm);
       luaX_set_field(L, -1, "disconnect_from_vm", impl_disconnect_from_vm);

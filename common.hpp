@@ -40,6 +40,9 @@ namespace dromozoa {
   PRL_RESULT free_handle(PRL_HANDLE handle);
   PRL_HANDLE check_handle(lua_State* L, int arg);
   void initialize_handle_gc(lua_State* L);
+
+  void inherit_handle(lua_State* L, const char* name);
+  void inherit_handle(lua_State* L, const char* name, const char* super);
 }
 
 #endif
