@@ -53,10 +53,10 @@ namespace dromozoa {
   }
 
   PRL_HANDLE check_handle(lua_State* L, int arg) {
-    if (PRL_HANDLE* data = static_cast<PRL_HANDLE*>(lua_touserdata(L, arg))) {
+    if (PRL_HANDLE* data = luaX_to_udata<PRL_HANDLE>(L, arg, "dromozoa.prl.job", "dromozoa.prl.result", "dromozoa.prl.server", "dromozoa.prl.virtual_machine")) {
       return *data;
     } else {
-      return PRL_INVALID_HANDLE;
+      return *luaX_check_udata<PRL_HANDLE>(L, arg, "dromozoa.prl.vm_configuration", "dromozoa.prl.handle");
     }
   }
 
