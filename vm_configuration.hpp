@@ -18,12 +18,6 @@
 #ifndef DROMOZOA_VM_CONFIGURATION_HPP
 #define DROMOZOA_VM_CONFIGURATION_HPP
 
-extern "C" {
-#include <lua.h>
-}
-
-namespace dromozoa {
-  void open_vm_configuration(lua_State* L);
-}
+#include "common.hpp"
 
 #endif

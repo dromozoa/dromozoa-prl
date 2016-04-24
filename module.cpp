@@ -39,6 +39,7 @@ namespace dromozoa {
   void open_handle(lua_State* L);
   void initialize_result(lua_State* L);
   void initialize_server(lua_State* L);
+  void initialize_vm_configuration(lua_State* L);
 
   inline void initialize_core(lua_State* L) {
     open_handle(L);
@@ -50,8 +51,7 @@ namespace dromozoa {
     initialize_result(L);
     initialize_server(L);
 
-    open_vm_configuration(L);
-    lua_setfield(L, -2, "vm_configuration");
+    initialize_vm_configuration(L);
 
     open_virtual_machine(L);
     lua_setfield(L, -2, "virtual_machine");

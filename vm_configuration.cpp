@@ -15,15 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <SdkWrap.h>
-
 #include <vector>
 
-#include <dromozoa/bind.hpp>
-
-#include "error.hpp"
-#include "handle.hpp"
-#include "vm_configuration.hpp"
+#include "common.hpp"
 
 namespace dromozoa {
   namespace {
@@ -45,17 +39,21 @@ namespace dromozoa {
     }
   }
 
-  void open_vm_configuration(lua_State* L) {
+  void initialize_vm_configuration(lua_State* L) {
     lua_newtable(L);
-    luaX_set_field(L, -1, "get_name", impl_get_name);
+    {
+      luaL_getmetatable(L, "dromozoa.prl.handle");
+      luaX_get_field(L, -1, "__index");
+      luaX_set_metafield(L, -3, "__index");
+      luaL_newmetatable(L, "dromozoa.prl.vm_configuration");
+      lua_pushvalue(L, -3);
+      luaX_set_field(L, -2, "__index");
+      luaX_get_field(L, -2, "__gc");
+      luaX_set_field(L, -2, "__gc");
+      lua_pop(L, 2);
 
-    luaL_getmetatable(L, "dromozoa.prl.handle");
-    lua_setmetatable(L, -2);
-
-    luaL_newmetatable(L, "dromozoa.prl.vm_configuration");
-    lua_pushvalue(L, -2);
-    lua_setfield(L, -2, "__index");
-    initialize_handle_gc(L);
-    lua_pop(L, 1);
+      luaX_set_field(L, -1, "get_name", impl_get_name);
+    }
+    luaX_set_field(L, -2, "vm_configuration");
   }
 }
