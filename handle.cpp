@@ -108,10 +108,6 @@ namespace dromozoa {
     }
   }
 
-  void initialize_handle_gc(lua_State* L) {
-    luaX_set_field(L, -1, "__gc", impl_gc);
-  }
-
   void inherit_handle(lua_State* L, const char* name) {
     inherit_handle(L, name, "dromozoa.prl.handle");
   }

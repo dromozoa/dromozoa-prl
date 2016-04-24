@@ -85,20 +85,13 @@ namespace dromozoa {
   void initialize_job(lua_State* L) {
     lua_newtable(L);
     {
+      inherit_handle(L, "dromozoa.prl.job");
+
       luaX_set_field(L, -1, "wait", impl_wait);
       luaX_set_field(L, -1, "get_ret_code", impl_get_ret_code);
       luaX_set_field(L, -1, "check_ret_code", impl_check_ret_code);
       luaX_set_field(L, -1, "get_result", impl_get_result);
       luaX_set_field(L, -1, "get_result_and_free", impl_get_result_and_free);
-
-      luaL_getmetatable(L, "dromozoa.prl.handle");
-      lua_setmetatable(L, -2);
-
-      luaL_newmetatable(L, "dromozoa.prl.job");
-      lua_pushvalue(L, -2);
-      lua_setfield(L, -2, "__index");
-      initialize_handle_gc(L);
-      lua_pop(L, 1);
     }
     luaX_set_field(L, -2, "job");
   }
