@@ -18,12 +18,6 @@
 #ifndef DROMOZOA_SDK_WRAP_HPP
 #define DROMOZOA_SDK_WRAP_HPP
 
-extern "C" {
-#include <lua.h>
-}
-
-namespace dromozoa {
-  void open_sdk_wrap(lua_State* L);
-}
+#include "common.hpp"
 
 #endif

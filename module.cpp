@@ -23,10 +23,7 @@
 #include <string>
 #include <vector>
 
-#include <dromozoa/bind.hpp>
-
 #include "common.hpp"
-#include "sdk_wrap.hpp"
 
 namespace dromozoa {
   void initialize_api(lua_State* L);
@@ -38,6 +35,7 @@ namespace dromozoa {
   void initialize_server(lua_State* L);
   void initialize_vm_configuration(lua_State* L);
   void initialize_virtual_machine(lua_State* L);
+  void open_sdk_wrap(lua_State* L);
 
   inline void initialize_core(lua_State* L) {
     open_handle(L);
