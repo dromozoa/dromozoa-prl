@@ -25,11 +25,7 @@
 
 #include <dromozoa/bind.hpp>
 
-#include "result.hpp"
-#include "job.hpp"
-#include "error.hpp"
-#include "virtual_machine.hpp"
-#include "vm_configuration.hpp"
+#include "common.hpp"
 #include "sdk_wrap.hpp"
 
 namespace dromozoa {
@@ -37,6 +33,7 @@ namespace dromozoa {
   void initialize_enum(lua_State* L);
   void initialize_key(lua_State* L);
   void open_handle(lua_State* L);
+  int open_job(lua_State* L);
   void initialize_result(lua_State* L);
   void initialize_server(lua_State* L);
   void initialize_vm_configuration(lua_State* L);

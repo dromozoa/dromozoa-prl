@@ -18,12 +18,6 @@
 #ifndef DROMOZOA_JOB_HPP
 #define DROMOZOA_JOB_HPP
 
-extern "C" {
-#include <lua.h>
-}
-
-namespace dromozoa {
-  int open_job(lua_State* L);
-}
+#include "common.hpp"
 
 #endif
