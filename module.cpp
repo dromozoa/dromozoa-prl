@@ -15,14 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <SdkWrap.h>
-
-#include <iostream>
-#include <limits>
-#include <sstream>
-#include <string>
-#include <vector>
-
 #include "common.hpp"
 
 namespace dromozoa {
