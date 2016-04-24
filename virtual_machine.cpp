@@ -80,25 +80,29 @@ namespace dromozoa {
     }
   }
 
-  void open_virtual_machine(lua_State* L) {
+  void initialize_virtual_machine(lua_State* L) {
     lua_newtable(L);
-    luaX_set_field(L, -1, "connect_to_vm", impl_connect_to_vm);
-    luaX_set_field(L, -1, "disconnect_from_vm", impl_disconnect_from_vm);
-    luaX_set_field(L, -1, "get_config", impl_get_config);
-    luaX_set_field(L, -1, "send_key_event_ex", impl_send_key_event_ex);
-    luaX_set_field(L, -1, "send_key_pressed_and_released", impl_send_key_pressed_and_released);
+    {
+      if (PHT_VIRTUAL_MACHINE == PHT_VM_CONFIGURATION) {
+        luaL_getmetatable(L, "dromozoa.prl.vm_configuration");
+      } else {
+        luaL_getmetatable(L, "dromozoa.prl.handle");
+      }
+      luaX_get_field(L, -1, "__index");
+      luaX_set_metafield(L, -3, "__index");
+      luaL_newmetatable(L, "dromozoa.prl.virtual_machine");
+      lua_pushvalue(L, -3);
+      luaX_set_field(L, -2, "__index");
+      luaX_get_field(L, -2, "__gc");
+      luaX_set_field(L, -2, "__gc");
+      lua_pop(L, 2);
 
-    if (PHT_VIRTUAL_MACHINE == PHT_VM_CONFIGURATION) {
-      luaL_getmetatable(L, "dromozoa.prl.vm_configuration");
-    } else {
-      luaL_getmetatable(L, "dromozoa.prl.handle");
+      luaX_set_field(L, -1, "connect_to_vm", impl_connect_to_vm);
+      luaX_set_field(L, -1, "disconnect_from_vm", impl_disconnect_from_vm);
+      luaX_set_field(L, -1, "get_config", impl_get_config);
+      luaX_set_field(L, -1, "send_key_event_ex", impl_send_key_event_ex);
+      luaX_set_field(L, -1, "send_key_pressed_and_released", impl_send_key_pressed_and_released);
     }
-    lua_setmetatable(L, -2);
-
-    luaL_newmetatable(L, "dromozoa.prl.virtual_machine");
-    lua_pushvalue(L, -2);
-    lua_setfield(L, -2, "__index");
-    initialize_handle_gc(L);
-    lua_pop(L, 1);
+    luaX_set_field(L, -2, "virtual_machine");
   }
 }

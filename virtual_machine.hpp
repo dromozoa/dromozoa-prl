@@ -18,12 +18,6 @@
 #ifndef DROMOZOA_VIRTUAL_MACHINE_HPP
 #define DROMOZOA_VIRTUAL_MACHINE_HPP
 
-extern "C" {
-#include <lua.h>
-}
-
-namespace dromozoa {
-  void open_virtual_machine(lua_State* L);
-}
+#include "common.hpp"
 
 #endif
