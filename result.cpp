@@ -15,12 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <SdkWrap.h>
-
-#include <dromozoa/bind.hpp>
-
-#include "error.hpp"
-#include "handle.hpp"
+#include "common.hpp"
 
 namespace dromozoa {
   namespace {
@@ -49,22 +44,19 @@ namespace dromozoa {
   void initialize_result(lua_State* L) {
     lua_newtable(L);
     {
+      luaL_getmetatable(L, "dromozoa.prl.handle");
+      luaX_get_field(L, -1, "__index");
+      luaX_set_metafield(L, -3, "__index");
       luaL_newmetatable(L, "dromozoa.prl.result");
-      lua_pushvalue(L, -2);
-      lua_setfield(L, -2, "__index");
-      initialize_handle_gc(L);
-      lua_pop(L, 1);
+      lua_pushvalue(L, -3);
+      luaX_set_field(L, -2, "__index");
+      luaX_get_field(L, -2, "__gc");
+      luaX_set_field(L, -2, "__gc");
+      lua_pop(L, 2);
 
       luaX_set_field(L, -1, "get_param_by_index", impl_get_param_by_index);
       luaX_set_field(L, -1, "get_params_count", impl_get_params_count);
 
-      luaL_getmetatable(L, "dromozoa.prl.handle");
-      lua_setmetatable(L, -2);
-
-      // luaL_getmetatable(L, "dromozoa.prl.handle");
-      // luaX_get_field(L, -1, "__index");
-      // luaX_set_metafield(L, -3);
-      // lua_pop(L, 1);
     }
     luaX_set_field(L, -2, "result");
   }
