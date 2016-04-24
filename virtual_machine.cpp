@@ -15,14 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <SdkWrap.h>
-
-#include <dromozoa/bind.hpp>
-
-#include "enum.hpp"
-#include "error.hpp"
-#include "handle.hpp"
-#include "virtual_machine.hpp"
+#include "common.hpp"
 
 namespace dromozoa {
   namespace {
