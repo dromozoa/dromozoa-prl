@@ -28,7 +28,6 @@
 #include "result.hpp"
 #include "job.hpp"
 #include "error.hpp"
-#include "server.hpp"
 #include "virtual_machine.hpp"
 #include "vm_configuration.hpp"
 #include "sdk_wrap.hpp"
@@ -39,6 +38,7 @@ namespace dromozoa {
   void initialize_key(lua_State* L);
   void open_handle(lua_State* L);
   void initialize_result(lua_State* L);
+  void initialize_server(lua_State* L);
 
   inline void initialize_core(lua_State* L) {
     open_handle(L);
@@ -48,9 +48,7 @@ namespace dromozoa {
     lua_setfield(L, -2, "job");
 
     initialize_result(L);
-
-    open_server(L);
-    lua_setfield(L, -2, "server");
+    initialize_server(L);
 
     open_vm_configuration(L);
     lua_setfield(L, -2, "vm_configuration");

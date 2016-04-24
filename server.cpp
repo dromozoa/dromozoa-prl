@@ -49,8 +49,8 @@ namespace dromozoa {
       PRL_HANDLE handle = PrlSrv_LoginLocal(
           check_handle(L, 1),
           lua_tostring(L, 2),
-          luaL_optinteger(L, 3, 0),
-          opt_enum(L, 4, PSL_NORMAL_SECURITY));
+          luaX_opt_integer<PRL_UINT32>(L, 3, 0),
+          luaX_opt_enum(L, 4, PSL_NORMAL_SECURITY));
       if (handle == PRL_INVALID_HANDLE) {
         push_error(L, PRL_ERR_INVALID_HANDLE);
       } else {
@@ -68,20 +68,24 @@ namespace dromozoa {
     }
   }
 
-  void open_server(lua_State* L) {
+  void initialize_server(lua_State* L) {
     lua_newtable(L);
-    luaX_set_field(L, -1, "create", impl_create);
-    luaX_set_field(L, -1, "get_vm_list", impl_get_vm_list);
-    luaX_set_field(L, -1, "login_local", impl_login_local);
-    luaX_set_field(L, -1, "logoff", impl_logoff);
+    {
+      luaL_getmetatable(L, "dromozoa.prl.handle");
+      luaX_get_field(L, -1, "__index");
+      luaX_set_metafield(L, -3, "__index");
+      luaL_newmetatable(L, "dromozoa.prl.server");
+      lua_pushvalue(L, -3);
+      luaX_set_field(L, -2, "__index");
+      luaX_get_field(L, -2, "__gc");
+      luaX_set_field(L, -2, "__gc");
+      lua_pop(L, 2);
 
-    luaL_getmetatable(L, "dromozoa.prl.handle");
-    lua_setmetatable(L, -2);
-
-    luaL_newmetatable(L, "dromozoa.prl.server");
-    lua_pushvalue(L, -2);
-    lua_setfield(L, -2, "__index");
-    initialize_handle_gc(L);
-    lua_pop(L, 1);
+      luaX_set_field(L, -1, "create", impl_create);
+      luaX_set_field(L, -1, "get_vm_list", impl_get_vm_list);
+      luaX_set_field(L, -1, "login_local", impl_login_local);
+      luaX_set_field(L, -1, "logoff", impl_logoff);
+    }
+    luaX_set_field(L, -2, "server");
   }
 }

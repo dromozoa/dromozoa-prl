@@ -18,12 +18,6 @@
 #ifndef DROMOZOA_SERVER_HPP
 #define DROMOZOA_SERVER_HPP
 
-extern "C" {
-#include <lua.h>
-}
-
-namespace dromozoa {
-  void open_server(lua_State* L);
-}
+#include "common.hpp"
 
 #endif

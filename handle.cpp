@@ -15,8 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <iostream>
-
 #include "common.hpp"
 
 namespace dromozoa {
@@ -89,7 +87,6 @@ namespace dromozoa {
     }
 
     void impl_gc(lua_State* L) {
-      std::cerr << "impl_gc\n";
       if (PRL_HANDLE* data = static_cast<PRL_HANDLE*>(lua_touserdata(L, 1))) {
         *data = PRL_INVALID_HANDLE;
       }
