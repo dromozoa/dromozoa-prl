@@ -36,14 +36,14 @@ namespace dromozoa {
     handle_reference& operator=(const handle_reference&);
   };
 
+  std::string result_to_string(PRL_RESULT result);
+  void push_error(lua_State* L, PRL_RESULT result);
+
   void new_handle(lua_State* L, PRL_HANDLE handle);
   handle_reference* check_handle_reference(lua_State* L, int arg);
   PRL_HANDLE check_handle(lua_State* L, int arg);
   void inherit_handle(lua_State* L, const char* name);
   void inherit_handle(lua_State* L, const char* name, const char* super);
-
-  std::string result_to_string(PRL_RESULT result);
-  void push_error(lua_State* L, PRL_RESULT result);
 }
 
 #endif
