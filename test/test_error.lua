@@ -17,19 +17,23 @@
 
 local prl = require "dromozoa.prl"
 
-local result, message = prl.sdk_wrap.unload()
-print(result, message)
-assert(not result)
-assert(message == "PRL_RESULT_DECLARE_ERROR(80000007)")
-
+local a, b, c = prl.sdk_wrap.unload()
+assert(a == nil)
+assert(b == "PRL_RESULT_DECLARE_ERROR(80000007)")
+assert(c == 0x0007 - 0x80000000)
 assert(prl.sdk_wrap.load_lib_from_std_paths())
 
-local result, message = prl.deinit()
-print(result, message)
-assert(not result)
-assert(message == "PRL_ERR_API_WASNT_INITIALIZED")
+local a, b, c = prl.deinit()
+assert(a == nil)
+assert(b == "PRL_ERR_API_WASNT_INITIALIZED")
+assert(c == 0x0287 - 0x80000000)
 
 assert(prl.init_ex())
 assert(prl.deinit())
+
 local a, b, c = prl.deinit()
 assert(a == nil)
+assert(b == "PRL_ERR_API_WASNT_INITIALIZED")
+assert(c == 0x0287 - 0x80000000)
+
+assert(prl.sdk_wrap.unload())
