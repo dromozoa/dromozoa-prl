@@ -22,10 +22,10 @@ namespace dromozoa {
     void impl_create(lua_State* L) {
       PRL_HANDLE handle = PRL_INVALID_HANDLE;
       PRL_RESULT result = PrlSrv_Create(&handle);
-      if (PRL_FAILED(result)) {
-        push_error(L, result);
-      } else {
+      if (PRL_SUCCEEDED(result)) {
         new_handle(L, handle);
+      } else {
+        push_error(L, result);
       }
     }
 
@@ -64,15 +64,7 @@ namespace dromozoa {
   void initialize_server(lua_State* L) {
     lua_newtable(L);
     {
-      luaL_getmetatable(L, "dromozoa.prl.handle");
-      luaX_get_field(L, -1, "__index");
-      luaX_set_metafield(L, -3, "__index");
-      luaL_newmetatable(L, "dromozoa.prl.server");
-      lua_pushvalue(L, -3);
-      luaX_set_field(L, -2, "__index");
-      luaX_get_field(L, -2, "__gc");
-      luaX_set_field(L, -2, "__gc");
-      lua_pop(L, 2);
+      inherit_handle(L, "dromozoa.prl.server");
 
       luaX_set_field(L, -1, "create", impl_create);
       luaX_set_field(L, -1, "get_vm_list", impl_get_vm_list);
