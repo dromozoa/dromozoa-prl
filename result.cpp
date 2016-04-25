@@ -22,21 +22,21 @@ namespace dromozoa {
     void impl_get_params_count(lua_State* L) {
       PRL_UINT32 count = 0;
       PRL_RESULT result = PrlResult_GetParamsCount(check_handle(L, 1), &count);
-      if (PRL_FAILED(result)) {
-        push_error(L, result);
+      if (PRL_SUCCEEDED(result)) {
+        luaX_push(L, count);
       } else {
-        lua_pushinteger(L, count);
+        push_error(L, result);
       }
     }
 
     void impl_get_param_by_index(lua_State* L) {
       PRL_HANDLE handle = PRL_INVALID_HANDLE;
-      PRL_UINT32 i = luaL_checkinteger(L, 2) - 1;
+      PRL_UINT32 i = luaX_check_integer<PRL_UINT32>(L, 2) - 1;
       PRL_RESULT result = PrlResult_GetParamByIndex(check_handle(L, 1), i, &handle);
-      if (PRL_FAILED(result)) {
-        push_error(L, result);
-      } else {
+      if (PRL_SUCCEEDED(result)) {
         new_handle(L, handle);
+      } else {
+        push_error(L, result);
       }
     }
   }
@@ -44,15 +44,7 @@ namespace dromozoa {
   void initialize_result(lua_State* L) {
     lua_newtable(L);
     {
-      luaL_getmetatable(L, "dromozoa.prl.handle");
-      luaX_get_field(L, -1, "__index");
-      luaX_set_metafield(L, -3, "__index");
-      luaL_newmetatable(L, "dromozoa.prl.result");
-      lua_pushvalue(L, -3);
-      luaX_set_field(L, -2, "__index");
-      luaX_get_field(L, -2, "__gc");
-      luaX_set_field(L, -2, "__gc");
-      lua_pop(L, 2);
+      inherit_handle(L, "dromozoa.prl.result");
 
       luaX_set_field(L, -1, "get_param_by_index", impl_get_param_by_index);
       luaX_set_field(L, -1, "get_params_count", impl_get_params_count);

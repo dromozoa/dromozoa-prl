@@ -28,7 +28,7 @@ namespace dromozoa {
   void initialize_server(lua_State* L);
   void initialize_vm_configuration(lua_State* L);
   void initialize_virtual_machine(lua_State* L);
-  void open_sdk_wrap(lua_State* L);
+  void initialize_sdk_wrap(lua_State* L);
 
   inline void initialize_core(lua_State* L) {
     initialize_handle(L);
@@ -45,9 +45,7 @@ namespace dromozoa {
   int open(lua_State* L) {
     lua_newtable(L);
 
-    open_sdk_wrap(L);
-    lua_setfield(L, -2, "sdk_wrap");
-
+    initialize_sdk_wrap(L);
     initialize_api(L);
     initialize_core(L);
     initialize_enum(L);
