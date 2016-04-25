@@ -23,59 +23,57 @@ namespace dromozoa {
       PRL_RESULT result = PrlJob_Wait(
           check_handle(L, 1),
           luaX_opt_integer<PRL_UINT32>(L, 2, std::numeric_limits<PRL_UINT32>::max()));
-      if (PRL_FAILED(result)) {
-        push_error(L, result);
-      } else {
+      if (PRL_SUCCEEDED(result)) {
         luaX_push_success(L);
+      } else {
+        push_error(L, result);
       }
     }
 
     void impl_get_ret_code(lua_State* L) {
       PRL_RESULT code = PRL_ERR_SUCCESS;
       PRL_RESULT result = PrlJob_GetRetCode(check_handle(L, 1), &code);
-      if (PRL_FAILED(result)) {
-        push_error(L, result);
-      } else {
+      if (PRL_SUCCEEDED(result)) {
         luaX_push(L, error_to_string(code));
         luaX_push(L, code);
+      } else {
+        push_error(L, result);
       }
     }
 
     void impl_check_ret_code(lua_State* L) {
       PRL_RESULT code = PRL_ERR_SUCCESS;
       PRL_RESULT result = PrlJob_GetRetCode(check_handle(L, 1), &code);
-      if (PRL_FAILED(result)) {
-        push_error(L, result);
-      }
-      if (PRL_FAILED(code)) {
-        push_error(L, code);
+      if (PRL_SUCCEEDED(result)) {
+        if (PRL_SUCCEEDED(code)) {
+          luaX_push_success(L);
+        } else {
+          push_error(L, code);
+        }
       } else {
-        luaX_push_success(L);
+        push_error(L, result);
       }
     }
 
     void impl_get_result(lua_State* L) {
       PRL_HANDLE handle = PRL_INVALID_HANDLE;
       PRL_RESULT result = PrlJob_GetResult(check_handle(L, 1), &handle);
-      if (PRL_FAILED(result)) {
-        push_error(L, result);
-      } else {
+      if (PRL_SUCCEEDED(result)) {
         new_handle(L, handle);
+      } else {
+        push_error(L, result);
       }
     }
 
     void impl_get_result_and_free(lua_State* L) {
-      if (PRL_HANDLE* data = static_cast<PRL_HANDLE*>(lua_touserdata(L, 1))) {
-        PRL_HANDLE handle = PRL_INVALID_HANDLE;
-        PRL_RESULT result = PrlJob_GetResult(*data, &handle);
-        if (PRL_FAILED(result)) {
-          push_error(L, result);
-        } else {
-          handle_reference(*data).free();
-          new_handle(L, handle);
-        }
+      handle_reference* self = check_handle_reference(L, 1);
+      PRL_HANDLE handle = PRL_INVALID_HANDLE;
+      PRL_RESULT result = PrlJob_GetResult(self->get(), &handle);
+      if (PRL_SUCCEEDED(result)) {
+        self->free(); // check?
+        new_handle(L, handle);
       } else {
-        push_error(L, PRL_ERR_INVALID_HANDLE);
+        push_error(L, result);
       }
     }
   }

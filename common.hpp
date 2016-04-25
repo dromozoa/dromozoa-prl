@@ -37,6 +37,7 @@ namespace dromozoa {
   };
 
   void new_handle(lua_State* L, PRL_HANDLE handle);
+  handle_reference* check_handle_reference(lua_State* L, int arg);
   PRL_HANDLE check_handle(lua_State* L, int arg);
   void inherit_handle(lua_State* L, const char* name);
   void inherit_handle(lua_State* L, const char* name, const char* super);

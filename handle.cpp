@@ -15,22 +15,10 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <iostream>
-
 #include "common.hpp"
 
 namespace dromozoa {
   namespace {
-    handle_reference* check_handle_reference(lua_State* L, int arg) {
-      return luaX_check_udata<handle_reference>(L, arg,
-          "dromozoa.prl.job",
-          "dromozoa.prl.result",
-          "dromozoa.prl.server",
-          "dromozoa.prl.virtual_machine",
-          "dromozoa.prl.vm_configuration",
-          "dromozoa.prl.handle");
-    }
-
     void impl_gc(lua_State* L) {
       check_handle_reference(L, 1)->~handle_reference();
     }
@@ -115,6 +103,16 @@ namespace dromozoa {
 
     luaX_new<handle_reference>(L, handle);
     luaX_set_metatable(L, name);
+  }
+
+  handle_reference* check_handle_reference(lua_State* L, int arg) {
+    return luaX_check_udata<handle_reference>(L, arg,
+        "dromozoa.prl.job",
+        "dromozoa.prl.result",
+        "dromozoa.prl.server",
+        "dromozoa.prl.virtual_machine",
+        "dromozoa.prl.vm_configuration",
+        "dromozoa.prl.handle");
   }
 
   PRL_HANDLE check_handle(lua_State* L, int arg) {
