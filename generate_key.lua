@@ -41,12 +41,15 @@ io.write([[
 namespace dromozoa {
   void initialize_key(lua_State* L) {
     lua_newtable(L);
+    {
 ]])
 for item in data:each() do
   local k = item[1]
-  io.write("    luaX_set_field<lua_Integer>(L, -1, \"", k:gsub("^PRL_KEY_", ""), "\", ", k, ");\n")
+  io.write("      luaX_set_field<lua_Integer>(L, -1, \"", k:gsub("^PRL_KEY_", ""), "\", ", k, ");\n")
 end
 io.write([[
+    }
+    luaX_set_field(L, -2, "key");
   }
 }
 ]])
