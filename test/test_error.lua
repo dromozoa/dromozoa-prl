@@ -36,4 +36,12 @@ assert(a == nil)
 assert(b == "PRL_ERR_API_WASNT_INITIALIZED")
 assert(c == 0x0287 - 0x80000000)
 
+assert(prl.succeeded(0) == true)
+assert(prl.failed(0) == false)
+assert(prl.result_to_string(0) == "PRL_ERR_SUCCESS")
+
+assert(prl.succeeded(c) == false)
+assert(prl.failed(c) == true)
+assert(prl.result_to_string(c) == "PRL_ERR_API_WASNT_INITIALIZED")
+
 assert(prl.sdk_wrap.unload())

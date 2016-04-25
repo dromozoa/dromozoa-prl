@@ -50,20 +50,6 @@ namespace dromozoa {
         push_error(L, result);
       }
     }
-
-    void impl_check_ret_code(lua_State* L) {
-      PRL_RESULT code = PRL_ERR_SUCCESS;
-      PRL_RESULT result = PrlJob_GetRetCode(check_handle(L, 1), &code);
-      if (PRL_SUCCEEDED(result)) {
-        if (PRL_SUCCEEDED(code)) {
-          luaX_push_success(L);
-        } else {
-          push_error(L, code);
-        }
-      } else {
-        push_error(L, result);
-      }
-    }
   }
 
   void initialize_job(lua_State* L) {
@@ -74,7 +60,6 @@ namespace dromozoa {
       luaX_set_field(L, -1, "wait", impl_wait);
       luaX_set_field(L, -1, "get_ret_code", impl_get_ret_code);
       luaX_set_field(L, -1, "get_result", impl_get_result);
-      luaX_set_field(L, -1, "check_ret_code", impl_check_ret_code);
     }
     luaX_set_field(L, -2, "job");
   }

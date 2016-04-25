@@ -50,6 +50,10 @@ namespace dromozoa {
     void impl_failed(lua_State* L) {
       return luaX_push<bool>(L, PRL_FAILED(luaX_check_integer<PRL_RESULT>(L, 1)));
     }
+
+    void impl_result_to_string(lua_State* L) {
+      return luaX_push(L, result_to_string(luaX_check_integer<PRL_RESULT>(L, 1)));
+    }
   }
 
   std::string result_to_string(PRL_RESULT result) {
@@ -81,5 +85,6 @@ namespace dromozoa {
     luaX_set_field(L, -1, "deinit", impl_deinit);
     luaX_set_field(L, -1, "succeeded", impl_succeeded);
     luaX_set_field(L, -1, "failed", impl_failed);
+    luaX_set_field(L, -1, "result_to_string", impl_result_to_string);
   }
 }

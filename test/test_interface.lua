@@ -17,21 +17,19 @@
 
 local prl = require "dromozoa.prl"
 
--- prl.sdk_wrap.load("libprl_sdk.dylib")
 assert(prl.sdk_wrap.load_lib_from_std_paths())
 assert(prl.init_ex())
 
 do
   local server = assert(prl.server.create())
-  assert(server:login_local():wait():check_ret_code()):free()
-
-  local job = server:get_vm_list():wait():check_ret_code()
-  local vm_list = job:get_result()
-  -- local vm_list = job:get_result()
-  -- job:free()
+  local job = assert(server:login_local())
+  local a, b = assert(job:wait():get_ret_code())
+  assert(prl.succeeded(b), a)
+  local job = assert(server:get_vm_list())
+  local a, b = assert(job:wait():get_ret_code())
+  assert(prl.succeeded(b), a)
+  local vm_list = assert(job:get_result())
   print(vm_list:get_params_count())
-  -- vm_list:free()
-  -- server:free()
 end
 collectgarbage()
 collectgarbage()
