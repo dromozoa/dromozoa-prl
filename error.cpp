@@ -38,9 +38,27 @@ namespace dromozoa {
     }
   }
 
+  std::string result_to_string(PRL_RESULT result) {
+    const char* string = 0;
+    if (PrlDbg_PrlResultToString) {
+      PrlDbg_PrlResultToString(result, &string);
+    }
+    if (string) {
+      return string;
+    } else {
+      std::ostringstream out;
+      if (PRL_SUCCEEDED(result)) {
+        out << "PRL_RESULT_DECLARE_SUCCESS(" << result << ")";
+      } else {
+        out << "PRL_RESULT_DECLARE_ERROR(" << std::hex << result << ")";
+      }
+      return out.str();
+    }
+  }
+
   void push_error(lua_State* L, PRL_RESULT result) {
     luaX_push(L, luaX_nil);
-    push_error_string(L, result);
+    luaX_push(L, result_to_string(result));
     luaX_push(L, result);
   }
 }

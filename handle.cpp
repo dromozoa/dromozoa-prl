@@ -15,13 +15,48 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <iostream>
+
 #include "common.hpp"
 
 namespace dromozoa {
   namespace {
-    lua_Integer get_handle_address(PRL_HANDLE handle) {
-      return reinterpret_cast<lua_Integer>(handle);
-    }
+    class handle_reference {
+    public:
+      explicit handle_reference(PRL_HANDLE handle) : handle_(handle) {}
+
+      ~handle_reference() {
+        if (handle_ != PRL_INVALID_HANDLE) {
+          PRL_RESULT result = free();
+          if (PRL_FAILED(result)) {
+            std::cerr << "could not free: " << result_to_string(result) << std::endl;
+          }
+        }
+      }
+
+      PRL_RESULT free() {
+        PRL_HANDLE handle = handle_;
+        handle_ = PRL_INVALID_HANDLE;
+        if (PrlHandle_Free) {
+          return PrlHandle_Free(handle);
+        } else {
+          return PRL_ERR_UNINITIALIZED;
+        }
+      }
+
+      PRL_HANDLE get() const {
+        return handle_;
+      }
+
+      intptr_t get_address() const {
+        return reinterpret_cast<intptr_t>(handle_);
+      }
+
+    private:
+      PRL_HANDLE handle_;
+      handle_reference(const handle_reference&);
+      handle_reference& operator=(const handle_reference&);
+    };
   }
 
   void new_handle(lua_State* L, PRL_HANDLE handle) {
@@ -48,7 +83,7 @@ namespace dromozoa {
         }
     }
 
-    luaX_new<PRL_HANDLE>(L, handle);
+    luaX_new<handle_reference>(L, handle);
     luaX_set_metatable(L, name);
   }
 
@@ -63,8 +98,8 @@ namespace dromozoa {
     }
   }
 
-  PRL_HANDLE check_handle(lua_State* L, int arg) {
-    return *luaX_check_udata<PRL_HANDLE>(L, arg,
+  handle_reference* check_handle_reference(lua_State* L, int arg) {
+    return luaX_check_udata<handle_reference>(L, arg,
         "dromozoa.prl.job",
         "dromozoa.prl.result",
         "dromozoa.prl.server",
@@ -73,23 +108,22 @@ namespace dromozoa {
         "dromozoa.prl.handle");
   }
 
+  PRL_HANDLE check_handle(lua_State* L, int arg) {
+    return check_handle_reference(L, arg)->get();
+  }
+
   namespace {
     void impl_free(lua_State* L) {
-      if (PRL_HANDLE* data = static_cast<PRL_HANDLE*>(lua_touserdata(L, 1))) {
-        PRL_RESULT result = free_handle(*data);
-        if (PRL_SUCCEEDED(result)) {
-          *data = PRL_INVALID_HANDLE;
-        }
+      PRL_RESULT result = check_handle_reference(L, 1)->free();
+      if (PRL_SUCCEEDED(result)) {
         luaX_push_success(L);
       } else {
-        push_error(L, PRL_ERR_INVALID_HANDLE);
+        push_error(L, result);
       }
     }
 
     void impl_gc(lua_State* L) {
-      if (PRL_HANDLE* data = static_cast<PRL_HANDLE*>(lua_touserdata(L, 1))) {
-        *data = PRL_INVALID_HANDLE;
-      }
+      check_handle_reference(L, 1)->~handle_reference();
     }
 
     void impl_get_type(lua_State* L) {
@@ -104,7 +138,7 @@ namespace dromozoa {
     }
 
     void impl_get_address(lua_State* L) {
-      lua_pushinteger(L, get_handle_address(check_handle(L, 1)));
+      luaX_push(L, check_handle_reference(L, 1)->get_address());
     }
   }
 

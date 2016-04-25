@@ -33,7 +33,7 @@ namespace dromozoa {
     return luaX_opt_enum<T>(L, n, d);
   }
 
-  void push_error_string(lua_State* L, PRL_RESULT result);
+  std::string result_to_string(PRL_RESULT result);
   void push_error(lua_State* L, PRL_RESULT result);
 
   void new_handle(lua_State* L, PRL_HANDLE handle);

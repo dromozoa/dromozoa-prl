@@ -36,8 +36,8 @@ namespace dromozoa {
       if (PRL_FAILED(result)) {
         push_error(L, result);
       } else {
-        push_error_string(L, code);
-        lua_pushinteger(L, code);
+        luaX_push(L, result_to_string(code));
+        luaX_push(L, code);
       }
     }
 
