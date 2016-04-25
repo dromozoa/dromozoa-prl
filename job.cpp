@@ -41,6 +41,16 @@ namespace dromozoa {
       }
     }
 
+    void impl_get_result(lua_State* L) {
+      PRL_HANDLE handle = PRL_INVALID_HANDLE;
+      PRL_RESULT result = PrlJob_GetResult(check_handle(L, 1), &handle);
+      if (PRL_SUCCEEDED(result)) {
+        new_handle(L, handle);
+      } else {
+        push_error(L, result);
+      }
+    }
+
     void impl_check_ret_code(lua_State* L) {
       PRL_RESULT code = PRL_ERR_SUCCESS;
       PRL_RESULT result = PrlJob_GetRetCode(check_handle(L, 1), &code);
@@ -54,28 +64,6 @@ namespace dromozoa {
         push_error(L, result);
       }
     }
-
-    void impl_get_result(lua_State* L) {
-      PRL_HANDLE handle = PRL_INVALID_HANDLE;
-      PRL_RESULT result = PrlJob_GetResult(check_handle(L, 1), &handle);
-      if (PRL_SUCCEEDED(result)) {
-        new_handle(L, handle);
-      } else {
-        push_error(L, result);
-      }
-    }
-
-    void impl_get_result_and_free(lua_State* L) {
-      handle_reference* self = check_handle_reference(L, 1);
-      PRL_HANDLE handle = PRL_INVALID_HANDLE;
-      PRL_RESULT result = PrlJob_GetResult(self->get(), &handle);
-      if (PRL_SUCCEEDED(result)) {
-        self->free(); // check?
-        new_handle(L, handle);
-      } else {
-        push_error(L, result);
-      }
-    }
   }
 
   void initialize_job(lua_State* L) {
@@ -85,9 +73,8 @@ namespace dromozoa {
 
       luaX_set_field(L, -1, "wait", impl_wait);
       luaX_set_field(L, -1, "get_ret_code", impl_get_ret_code);
-      luaX_set_field(L, -1, "check_ret_code", impl_check_ret_code);
       luaX_set_field(L, -1, "get_result", impl_get_result);
-      luaX_set_field(L, -1, "get_result_and_free", impl_get_result_and_free);
+      luaX_set_field(L, -1, "check_ret_code", impl_check_ret_code);
     }
     luaX_set_field(L, -2, "job");
   }
