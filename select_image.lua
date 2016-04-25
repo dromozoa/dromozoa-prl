@@ -51,4 +51,3 @@ for p in img:each(min_x, max_x, min_y, max_y) do
 end
 
 io.write(("%d %d %d %d\n"):format(result_min_x, result_max_x, result_min_y, result_max_y))
-
