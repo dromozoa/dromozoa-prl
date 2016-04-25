@@ -22,7 +22,7 @@ namespace dromozoa {
     void impl_connect_to_vm(lua_State* L) {
       PRL_HANDLE handle = PrlDevDisplay_ConnectToVm(
           check_handle(L, 1),
-          opt_enum(L, 2, PDCT_HIGH_QUALITY_WITHOUT_COMPRESSION));
+          luaX_opt_enum(L, 2, PDCT_HIGH_QUALITY_WITHOUT_COMPRESSION));
       if (handle == PRL_INVALID_HANDLE) {
         push_error(L, PRL_ERR_INVALID_HANDLE);
       } else {
@@ -52,8 +52,8 @@ namespace dromozoa {
     void impl_send_key_event_ex(lua_State* L) {
       PRL_RESULT result = PrlDevKeyboard_SendKeyEventEx(
           check_handle(L, 1),
-          check_enum<PRL_KEY>(L, 2),
-          check_enum<PRL_KEY_EVENT>(L, 3));
+          luaX_check_enum<PRL_KEY>(L, 2),
+          luaX_check_enum<PRL_KEY_EVENT>(L, 3));
       if (PRL_FAILED(result)) {
         push_error(L, result);
       } else {
@@ -64,7 +64,7 @@ namespace dromozoa {
     void impl_send_key_pressed_and_released(lua_State* L) {
       PRL_RESULT result = PrlDevKeyboard_SendKeyPressedAndReleased(
           check_handle(L, 1),
-          check_enum<PRL_KEY>(L, 2));
+          luaX_check_enum<PRL_KEY>(L, 2));
       if (PRL_FAILED(result)) {
         push_error(L, result);
       } else {

@@ -23,25 +23,26 @@
 #include <dromozoa/bind.hpp>
 
 namespace dromozoa {
-  template <class T>
-  inline T check_enum(lua_State* L, int n) {
-    return luaX_check_enum<T>(L, n);
-  }
+  class handle_reference {
+  public:
+    explicit handle_reference(PRL_HANDLE handle);
+    ~handle_reference();
+    PRL_RESULT free();
+    PRL_HANDLE get() const;
+    intptr_t get_address() const;
+  private:
+    PRL_HANDLE handle_;
+    handle_reference(const handle_reference&);
+    handle_reference& operator=(const handle_reference&);
+  };
 
-  template <class T>
-  inline T opt_enum(lua_State* L, int n, T d) {
-    return luaX_opt_enum<T>(L, n, d);
-  }
+  void new_handle(lua_State* L, PRL_HANDLE handle);
+  PRL_HANDLE check_handle(lua_State* L, int arg);
+  void inherit_handle(lua_State* L, const char* name);
+  void inherit_handle(lua_State* L, const char* name, const char* super);
 
   std::string result_to_string(PRL_RESULT result);
   void push_error(lua_State* L, PRL_RESULT result);
-
-  void new_handle(lua_State* L, PRL_HANDLE handle);
-  PRL_RESULT free_handle(PRL_HANDLE handle);
-  PRL_HANDLE check_handle(lua_State* L, int arg);
-
-  void inherit_handle(lua_State* L, const char* name);
-  void inherit_handle(lua_State* L, const char* name, const char* super);
 }
 
 #endif

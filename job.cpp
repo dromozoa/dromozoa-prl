@@ -70,12 +70,10 @@ namespace dromozoa {
         PRL_RESULT result = PrlJob_GetResult(*data, &handle);
         if (PRL_FAILED(result)) {
           push_error(L, result);
+        } else {
+          handle_reference(*data).free();
+          new_handle(L, handle);
         }
-        result = free_handle(*data);
-        if (PRL_SUCCEEDED(result)) {
-          *data = PRL_INVALID_HANDLE;
-        }
-        new_handle(L, handle);
       } else {
         push_error(L, PRL_ERR_INVALID_HANDLE);
       }
