@@ -41,7 +41,7 @@ namespace dromozoa {
   void inherit_handle(lua_State* L, const char* name);
   void inherit_handle(lua_State* L, const char* name, const char* super);
 
-  std::string result_to_string(PRL_RESULT result);
+  std::string error_to_string(PRL_RESULT result);
   void push_error(lua_State* L, PRL_RESULT result);
 }
 

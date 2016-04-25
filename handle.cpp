@@ -66,7 +66,7 @@ namespace dromozoa {
     if (handle_ != PRL_INVALID_HANDLE) {
       PRL_RESULT result = free();
       if (PRL_FAILED(result)) {
-        std::cerr << "could not free: " << result_to_string(result) << std::endl;
+        DROMOZOA_UNEXPECTED(error_to_string(result));
       }
     }
   }

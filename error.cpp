@@ -20,25 +20,7 @@
 #include "common.hpp"
 
 namespace dromozoa {
-  void push_error_string(lua_State* L, PRL_RESULT result) {
-    const char* string = 0;
-    if (PrlDbg_PrlResultToString) {
-      PrlDbg_PrlResultToString(result, &string);
-    }
-    if (string) {
-      luaX_push(L, string);
-    } else {
-      if (PRL_SUCCEEDED(result)) {
-        lua_pushfstring(L, "PRL_RESULT_DECLARE_SUCCESS(%d)", result);
-      } else {
-        std::ostringstream out;
-        out << std::hex << "PRL_RESULT_DECLARE_ERROR(" << result << ")";
-        luaX_push(L, out.str());
-      }
-    }
-  }
-
-  std::string result_to_string(PRL_RESULT result) {
+  std::string error_to_string(PRL_RESULT result) {
     const char* string = 0;
     if (PrlDbg_PrlResultToString) {
       PrlDbg_PrlResultToString(result, &string);
@@ -58,7 +40,7 @@ namespace dromozoa {
 
   void push_error(lua_State* L, PRL_RESULT result) {
     luaX_push(L, luaX_nil);
-    luaX_push(L, result_to_string(result));
+    luaX_push(L, error_to_string(result));
     luaX_push(L, result);
   }
 }
