@@ -34,7 +34,7 @@ namespace dromozoa {
       PRL_RESULT code = PRL_ERR_SUCCESS;
       PRL_RESULT result = PrlJob_GetRetCode(check_handle(L, 1), &code);
       if (PRL_SUCCEEDED(result)) {
-        luaX_push(L, error_to_string(code));
+        luaX_push(L, result_to_string(code));
         luaX_push(L, code);
       } else {
         push_error(L, result);

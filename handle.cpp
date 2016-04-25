@@ -54,7 +54,7 @@ namespace dromozoa {
     if (handle_ != PRL_INVALID_HANDLE) {
       PRL_RESULT result = free();
       if (PRL_FAILED(result)) {
-        DROMOZOA_UNEXPECTED(error_to_string(result));
+        DROMOZOA_UNEXPECTED(result_to_string(result));
       }
     }
   }
