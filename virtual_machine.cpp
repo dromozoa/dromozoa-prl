@@ -32,20 +32,20 @@ namespace dromozoa {
 
     void impl_disconnect_from_vm(lua_State* L) {
       PRL_RESULT result = PrlDevDisplay_DisconnectFromVm(check_handle(L, 1));
-      if (PRL_FAILED(result)) {
-        push_error(L, result);
-      } else {
+      if (PRL_SUCCEEDED(result)) {
         luaX_push_success(L);
+      } else {
+        push_error(L, result);
       }
     }
 
     void impl_get_config(lua_State* L) {
       PRL_HANDLE handle = PRL_INVALID_HANDLE;
       PRL_RESULT result = PrlVm_GetConfig(check_handle(L, 1), &handle);
-      if (PRL_FAILED(result)) {
-        push_error(L, result);
-      } else {
+      if (PRL_SUCCEEDED(result)) {
         new_handle(L, handle);
+      } else {
+        push_error(L, result);
       }
     }
 
@@ -54,10 +54,10 @@ namespace dromozoa {
           check_handle(L, 1),
           luaX_check_enum<PRL_KEY>(L, 2),
           luaX_check_enum<PRL_KEY_EVENT>(L, 3));
-      if (PRL_FAILED(result)) {
-        push_error(L, result);
-      } else {
+      if (PRL_SUCCEEDED(result)) {
         luaX_push_success(L);
+      } else {
+        push_error(L, result);
       }
     }
 
@@ -65,10 +65,10 @@ namespace dromozoa {
       PRL_RESULT result = PrlDevKeyboard_SendKeyPressedAndReleased(
           check_handle(L, 1),
           luaX_check_enum<PRL_KEY>(L, 2));
-      if (PRL_FAILED(result)) {
-        push_error(L, result);
-      } else {
+      if (PRL_SUCCEEDED(result)) {
         luaX_push_success(L);
+      } else {
+        push_error(L, result);
       }
     }
   }

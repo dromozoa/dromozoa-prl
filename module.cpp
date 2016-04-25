@@ -23,20 +23,10 @@ namespace dromozoa {
   void initialize_key(lua_State* L);
 
   void initialize_handle(lua_State* L);
-  void initialize_job(lua_State* L);
-  void initialize_result(lua_State* L);
-  void initialize_server(lua_State* L);
-  void initialize_vm_configuration(lua_State* L);
-  void initialize_virtual_machine(lua_State* L);
   void initialize_sdk_wrap(lua_State* L);
 
   inline void initialize_core(lua_State* L) {
     initialize_handle(L);
-    initialize_job(L);
-    initialize_result(L);
-    initialize_server(L);
-    initialize_vm_configuration(L);
-    initialize_virtual_machine(L);
 
     initialize_key(L);
     lua_setfield(L, -2, "key");

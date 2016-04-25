@@ -45,7 +45,6 @@ namespace dromozoa {
     lua_newtable(L);
     {
       inherit_handle(L, "dromozoa.prl.result");
-
       luaX_set_field(L, -1, "get_param_by_index", impl_get_param_by_index);
       luaX_set_field(L, -1, "get_params_count", impl_get_params_count);
 

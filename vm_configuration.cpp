@@ -25,35 +25,30 @@ namespace dromozoa {
       PRL_HANDLE handle = check_handle(L, 1);
       PRL_UINT32 size = 0;
       PRL_RESULT result = PrlVmCfg_GetName(handle, 0, &size);
-      if (PRL_FAILED(result)) {
-        push_error(L, result);
-      } else {
+      if (PRL_SUCCEEDED(result)) {
         std::vector<char> buffer(size);
         result = PrlVmCfg_GetName(handle, &buffer[0], &size);
-        if (PRL_FAILED(result)) {
-          push_error(L, result);
+        if (PRL_SUCCEEDED(result)) {
+          luaX_push(L, &buffer[0]);
         } else {
-          lua_pushstring(L, &buffer[0]);
+          push_error(L, result);
         }
+      } else {
+        push_error(L, result);
       }
     }
   }
 
+  void initialize_virtual_machine(lua_State* L);
+
   void initialize_vm_configuration(lua_State* L) {
     lua_newtable(L);
     {
-      luaL_getmetatable(L, "dromozoa.prl.handle");
-      luaX_get_field(L, -1, "__index");
-      luaX_set_metafield(L, -3, "__index");
-      luaL_newmetatable(L, "dromozoa.prl.vm_configuration");
-      lua_pushvalue(L, -3);
-      luaX_set_field(L, -2, "__index");
-      luaX_get_field(L, -2, "__gc");
-      luaX_set_field(L, -2, "__gc");
-      lua_pop(L, 2);
-
+      inherit_handle(L, "dromozoa.prl.vm_configuration");
       luaX_set_field(L, -1, "get_name", impl_get_name);
     }
     luaX_set_field(L, -2, "vm_configuration");
+
+    initialize_virtual_machine(L);
   }
 }

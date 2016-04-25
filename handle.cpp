@@ -135,6 +135,11 @@ namespace dromozoa {
     lua_pop(L, 2);
   }
 
+  void initialize_job(lua_State* L);
+  void initialize_result(lua_State* L);
+  void initialize_server(lua_State* L);
+  void initialize_vm_configuration(lua_State* L);
+
   void initialize_handle(lua_State* L) {
     lua_newtable(L);
     {
@@ -149,5 +154,10 @@ namespace dromozoa {
       luaX_set_field(L, -1, "get_type", impl_get_type);
     }
     luaX_set_field(L, -2, "handle");
+
+    initialize_job(L);
+    initialize_result(L);
+    initialize_server(L);
+    initialize_vm_configuration(L);
   }
 }
