@@ -15,82 +15,62 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
-extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
-}
-
-#include <SdkWrap.h>
-
-#include "dromozoa/bind.hpp"
-
-#include "enum.hpp"
-#include "error.hpp"
-#include "handle.hpp"
-#include "server.hpp"
+#include "common.hpp"
 
 namespace dromozoa {
-  using bind::function;
-
   namespace {
-    int impl_create(lua_State* L) {
+    void impl_create(lua_State* L) {
       PRL_HANDLE handle = PRL_INVALID_HANDLE;
       PRL_RESULT result = PrlSrv_Create(&handle);
-      if (PRL_FAILED(result)) {
-        return push_error(L, result);
+      if (PRL_SUCCEEDED(result)) {
+        new_handle(L, handle);
       } else {
-        return new_handle(L, handle);
+        push_error(L, result);
       }
     }
 
-    int impl_get_vm_list(lua_State* L) {
-      PRL_HANDLE handle = PrlSrv_GetVmList(get_handle(L, 1));
+    void impl_get_vm_list(lua_State* L) {
+      PRL_HANDLE handle = PrlSrv_GetVmList(check_handle(L, 1));
       if (handle == PRL_INVALID_HANDLE) {
-        return push_error(L, PRL_ERR_INVALID_HANDLE);
+        push_error(L, PRL_ERR_INVALID_HANDLE);
       } else {
-        return new_handle(L, handle);
+        new_handle(L, handle);
       }
     }
 
-    int impl_login_local(lua_State* L) {
+    void impl_login_local(lua_State* L) {
       PRL_HANDLE handle = PrlSrv_LoginLocal(
-          get_handle(L, 1),
+          check_handle(L, 1),
           lua_tostring(L, 2),
-          luaL_optinteger(L, 3, 0),
-          opt_enum(L, 4, PSL_NORMAL_SECURITY));
+          luaX_opt_integer<PRL_UINT32>(L, 3, 0),
+          luaX_opt_enum(L, 4, PSL_NORMAL_SECURITY));
       if (handle == PRL_INVALID_HANDLE) {
-        return push_error(L, PRL_ERR_INVALID_HANDLE);
+        push_error(L, PRL_ERR_INVALID_HANDLE);
       } else {
-        return new_handle(L, handle);
+        new_handle(L, handle);
       }
     }
 
-    int impl_logoff(lua_State* L) {
-      PRL_HANDLE handle = PrlSrv_Logoff(get_handle(L, 1));
+    void impl_logoff(lua_State* L) {
+      PRL_HANDLE handle = PrlSrv_Logoff(check_handle(L, 1));
       if (handle == PRL_INVALID_HANDLE) {
-        return push_error(L, PRL_ERR_INVALID_HANDLE);
+        push_error(L, PRL_ERR_INVALID_HANDLE);
       } else {
-        return new_handle(L, handle);
+        new_handle(L, handle);
       }
     }
   }
 
-  int open_server(lua_State* L) {
+  void initialize_server(lua_State* L) {
     lua_newtable(L);
-    function<impl_create>::set_field(L, "create");
-    function<impl_get_vm_list>::set_field(L, "get_vm_list");
-    function<impl_login_local>::set_field(L, "login_local");
-    function<impl_logoff>::set_field(L, "logoff");
+    {
+      inherit_handle(L, "dromozoa.prl.server");
 
-    luaL_getmetatable(L, "dromozoa.prl.handle");
-    lua_setmetatable(L, -2);
-
-    luaL_newmetatable(L, "dromozoa.prl.server");
-    lua_pushvalue(L, -2);
-    lua_setfield(L, -2, "__index");
-    initialize_handle_gc(L);
-    lua_pop(L, 1);
-
-    return 1;
+      luaX_set_field(L, -1, "create", impl_create);
+      luaX_set_field(L, -1, "get_vm_list", impl_get_vm_list);
+      luaX_set_field(L, -1, "login_local", impl_login_local);
+      luaX_set_field(L, -1, "logoff", impl_logoff);
+    }
+    luaX_set_field(L, -2, "server");
   }
 }

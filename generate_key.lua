@@ -15,44 +15,25 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
-local loadstring = require "dromozoa.commons.loadstring"
-local pairs = require "dromozoa.commons.pairs"
-local sequence = require "dromozoa.commons.sequence"
-
-local body = assert(io.read("*a"):match("({[^{}]*}) PRL_KEY;"))
-local enum = assert(loadstring("return " .. body))()
-
-enum.PRL_KEY_INVALID = nil
-enum.PRL_KEY_MAX  = nil
-
-local data = sequence()
-local i = 0
-for k, v in pairs(enum) do
-  data:push({ k, v })
-end
-data:sort(function (a, b)
-  return a[2] < b[2]
-end)
 io.write([[
-extern "C" {
-#include <lua.h>
-}
-
-#include <SdkWrap.h>
-
-#include "dromozoa/bind.hpp"
+#include "common.hpp"
 
 namespace dromozoa {
-  using bind::set_field;
-  int open_key(lua_State* L) {
+  void initialize_key(lua_State* L) {
     lua_newtable(L);
+    {
 ]])
-for item in data:each() do
-  local k = item[1]
-  io.write("    set_field(L, \"", k:gsub("^PRL_KEY_", ""), "\", ", k, ");\n")
+
+for line in io.lines() do
+  local key = line:match("PRL_KEY_(%S+)%s*=%s*%d+")
+  if key ~= nil and key ~= "INVALID" and key ~= "MAX" then
+    io.write("      luaX_set_field<lua_Integer>(L, -1, \"", key, "\", PRL_KEY_", key, ");\n")
+  end
 end
+
 io.write([[
-    return 1;
+    }
+    luaX_set_field(L, -2, "key");
   }
 }
 ]])

@@ -15,60 +15,40 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
-extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
-}
-
-#include <SdkWrap.h>
-
-#include "dromozoa/bind.hpp"
-
-#include "error.hpp"
-#include "handle.hpp"
-#include "result.hpp"
+#include "common.hpp"
 
 namespace dromozoa {
-  using bind::function;
-
   namespace {
-    int impl_get_params_count(lua_State* L) {
+    void impl_get_params_count(lua_State* L) {
       PRL_UINT32 count = 0;
-      PRL_RESULT result = PrlResult_GetParamsCount(get_handle(L, 1), &count);
-      if (PRL_FAILED(result)) {
-        return push_error(L, result);
+      PRL_RESULT result = PrlResult_GetParamsCount(check_handle(L, 1), &count);
+      if (PRL_SUCCEEDED(result)) {
+        luaX_push(L, count);
       } else {
-        lua_pushinteger(L, count);
-        return 1;
+        push_error(L, result);
       }
     }
 
-    int impl_get_param_by_index(lua_State* L) {
+    void impl_get_param_by_index(lua_State* L) {
       PRL_HANDLE handle = PRL_INVALID_HANDLE;
-      PRL_UINT32 i = luaL_checkinteger(L, 2) - 1;
-      PRL_RESULT result = PrlResult_GetParamByIndex(get_handle(L, 1), i, &handle);
-      if (PRL_FAILED(result)) {
-        return push_error(L, result);
+      PRL_UINT32 i = luaX_check_integer<PRL_UINT32>(L, 2) - 1;
+      PRL_RESULT result = PrlResult_GetParamByIndex(check_handle(L, 1), i, &handle);
+      if (PRL_SUCCEEDED(result)) {
+        new_handle(L, handle);
       } else {
-        return new_handle(L, handle);
+        push_error(L, result);
       }
     }
   }
 
-  int open_result(lua_State* L) {
+  void initialize_result(lua_State* L) {
     lua_newtable(L);
-    function<impl_get_param_by_index>::set_field(L, "get_param_by_index");
-    function<impl_get_params_count>::set_field(L, "get_params_count");
+    {
+      inherit_handle(L, "dromozoa.prl.result");
+      luaX_set_field(L, -1, "get_param_by_index", impl_get_param_by_index);
+      luaX_set_field(L, -1, "get_params_count", impl_get_params_count);
 
-    luaL_getmetatable(L, "dromozoa.prl.handle");
-    lua_setmetatable(L, -2);
-
-    luaL_newmetatable(L, "dromozoa.prl.result");
-    lua_pushvalue(L, -2);
-    lua_setfield(L, -2, "__index");
-    initialize_handle_gc(L);
-    lua_pop(L, 1);
-
-    return 1;
+    }
+    luaX_set_field(L, -2, "result");
   }
 }

@@ -15,61 +15,44 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
-extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
-}
-
-#include <SdkWrap.h>
-
-#include "dromozoa/bind.hpp"
+#include "common.hpp"
 
 namespace dromozoa {
-  namespace detail {
-    lua_Integer check_enum(lua_State* L, int n) {
-      return luaL_checkinteger(L, n);
-    }
-
-    lua_Integer opt_enum(lua_State* L, int n, lua_Integer d) {
-      return luaL_optinteger(L, n, d);
-    }
-  }
-
   void initialize_enum(lua_State* L) {
     // PRL_API_COMMAND_FLAGS
-    DROMOZOA_BIND_SET_FIELD(L, PACF_NORMAL_SECURITY);
-    DROMOZOA_BIND_SET_FIELD(L, PACF_HIGH_SECURITY);
-    DROMOZOA_BIND_SET_FIELD(L, PACF_NON_INTERACTIVE_MODE);
-    DROMOZOA_BIND_SET_FIELD(L, PACF_CANCEL_TASK_ON_END_SESSION);
+    luaX_set_field<lua_Integer>(L, -1, "PACF_NORMAL_SECURITY", PACF_NORMAL_SECURITY);
+    luaX_set_field<lua_Integer>(L, -1, "PACF_HIGH_SECURITY", PACF_HIGH_SECURITY);
+    luaX_set_field<lua_Integer>(L, -1, "PACF_NON_INTERACTIVE_MODE", PACF_NON_INTERACTIVE_MODE);
+    luaX_set_field<lua_Integer>(L, -1, "PACF_CANCEL_TASK_ON_END_SESSION", PACF_CANCEL_TASK_ON_END_SESSION);
 
     // PRL_API_INIT_FLAGS
-    DROMOZOA_BIND_SET_FIELD(L, PAIF_USE_GRAPHIC_MODE);
-    DROMOZOA_BIND_SET_FIELD(L, PAIF_INIT_AS_APPSTORE_CLIENT);
+    luaX_set_field<lua_Integer>(L, -1, "PAIF_USE_GRAPHIC_MODE", PAIF_USE_GRAPHIC_MODE);
+    luaX_set_field<lua_Integer>(L, -1, "PAIF_INIT_AS_APPSTORE_CLIENT", PAIF_INIT_AS_APPSTORE_CLIENT);
 
     // PRL_APPLICATION_MODE
-    DROMOZOA_BIND_SET_FIELD(L, PAM_UNKNOWN);
-    DROMOZOA_BIND_SET_FIELD(L, PAM_SERVER);
-    DROMOZOA_BIND_SET_FIELD(L, PAM_DESKTOP_MAC);
-    DROMOZOA_BIND_SET_FIELD(L, PAM_WORKSTATION_EXTREME);
-    DROMOZOA_BIND_SET_FIELD(L, PAM_PLAYER);
-    DROMOZOA_BIND_SET_FIELD(L, PAM_DESKTOP_STM);
-    DROMOZOA_BIND_SET_FIELD(L, PAM_DESKTOP_WL);
-    DROMOZOA_BIND_SET_FIELD(L, PAM_MOBILE);
-    DROMOZOA_BIND_SET_FIELD(L, PAM_DESKTOP_STM_OBSOLETE);
-    DROMOZOA_BIND_SET_FIELD(L, PAM_DESKTOP);
-    DROMOZOA_BIND_SET_FIELD(L, PAM_WORKSTATION);
-    DROMOZOA_BIND_SET_FIELD(L, PAM_STM);
+    luaX_set_field<lua_Integer>(L, -1, "PAM_UNKNOWN", PAM_UNKNOWN);
+    luaX_set_field<lua_Integer>(L, -1, "PAM_SERVER", PAM_SERVER);
+    luaX_set_field<lua_Integer>(L, -1, "PAM_DESKTOP_MAC", PAM_DESKTOP_MAC);
+    luaX_set_field<lua_Integer>(L, -1, "PAM_WORKSTATION_EXTREME", PAM_WORKSTATION_EXTREME);
+    luaX_set_field<lua_Integer>(L, -1, "PAM_PLAYER", PAM_PLAYER);
+    luaX_set_field<lua_Integer>(L, -1, "PAM_DESKTOP_STM", PAM_DESKTOP_STM);
+    luaX_set_field<lua_Integer>(L, -1, "PAM_DESKTOP_WL", PAM_DESKTOP_WL);
+    luaX_set_field<lua_Integer>(L, -1, "PAM_MOBILE", PAM_MOBILE);
+    luaX_set_field<lua_Integer>(L, -1, "PAM_DESKTOP_STM_OBSOLETE", PAM_DESKTOP_STM_OBSOLETE);
+    luaX_set_field<lua_Integer>(L, -1, "PAM_DESKTOP", PAM_DESKTOP);
+    luaX_set_field<lua_Integer>(L, -1, "PAM_WORKSTATION", PAM_WORKSTATION);
+    luaX_set_field<lua_Integer>(L, -1, "PAM_STM", PAM_STM);
 
     // PRL_DISPLAY_CODEC_TYPE
-    DROMOZOA_BIND_SET_FIELD(L, PDCT_HIGH_QUALITY_WITHOUT_COMPRESSION);
-    DROMOZOA_BIND_SET_FIELD(L, PDCT_HIGH_QUALITY_WITH_COMPRESSION);
-    DROMOZOA_BIND_SET_FIELD(L, PDCT_MEDIUM_QUALITY_WITHOUT_COMPRESSION);
-    DROMOZOA_BIND_SET_FIELD(L, PDCT_MEDIUM_QUALITY_WITH_COMPRESSION);
-    DROMOZOA_BIND_SET_FIELD(L, PDCT_LOW_QUALITY_WITHOUT_COMPRESSION);
-    DROMOZOA_BIND_SET_FIELD(L, PDCT_LOW_QUALITY_WITH_COMPRESSION);
+    luaX_set_field<lua_Integer>(L, -1, "PDCT_HIGH_QUALITY_WITHOUT_COMPRESSION", PDCT_HIGH_QUALITY_WITHOUT_COMPRESSION);
+    luaX_set_field<lua_Integer>(L, -1, "PDCT_HIGH_QUALITY_WITH_COMPRESSION", PDCT_HIGH_QUALITY_WITH_COMPRESSION);
+    luaX_set_field<lua_Integer>(L, -1, "PDCT_MEDIUM_QUALITY_WITHOUT_COMPRESSION", PDCT_MEDIUM_QUALITY_WITHOUT_COMPRESSION);
+    luaX_set_field<lua_Integer>(L, -1, "PDCT_MEDIUM_QUALITY_WITH_COMPRESSION", PDCT_MEDIUM_QUALITY_WITH_COMPRESSION);
+    luaX_set_field<lua_Integer>(L, -1, "PDCT_LOW_QUALITY_WITHOUT_COMPRESSION", PDCT_LOW_QUALITY_WITHOUT_COMPRESSION);
+    luaX_set_field<lua_Integer>(L, -1, "PDCT_LOW_QUALITY_WITH_COMPRESSION", PDCT_LOW_QUALITY_WITH_COMPRESSION);
 
     // PRL_KEY_EVENT
-    DROMOZOA_BIND_SET_FIELD(L, PKE_PRESS);
-    DROMOZOA_BIND_SET_FIELD(L, PKE_RELEASE);
+    luaX_set_field<lua_Integer>(L, -1, "PKE_PRESS", PKE_PRESS);
+    luaX_set_field<lua_Integer>(L, -1, "PKE_RELEASE", PKE_RELEASE);
   }
 }
