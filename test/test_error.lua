@@ -17,20 +17,31 @@
 
 local prl = require "dromozoa.prl"
 
-prl.set_raise_error(true)
+local a, b, c = prl.sdk_wrap.unload()
+assert(a == nil)
+assert(b == "PRL_RESULT_DECLARE_ERROR(80000007)")
+assert(c == 0x0007 - 0x80000000)
+assert(prl.sdk_wrap.load_lib_from_std_paths())
 
-local result, message = pcall(prl.sdk_wrap.unload)
--- print(result, message)
-assert(not result)
-assert(message == "PRL_RESULT_DECLARE_ERROR(80000007)")
+local a, b, c = prl.deinit()
+assert(a == nil)
+assert(b == "PRL_ERR_API_WASNT_INITIALIZED")
+assert(c == 0x0287 - 0x80000000)
 
-prl.sdk_wrap.load_lib_from_std_paths()
+assert(prl.init_ex())
+assert(prl.deinit())
 
-local result, message = pcall(prl.deinit)
--- print(result, message)
-assert(not result)
-assert(message == "PRL_ERR_API_WASNT_INITIALIZED")
+local a, b, c = prl.deinit()
+assert(a == nil)
+assert(b == "PRL_ERR_API_WASNT_INITIALIZED")
+assert(c == 0x0287 - 0x80000000)
 
-prl.init_ex()
-prl.deinit()
-assert(not pcall(prl.deinit))
+assert(prl.succeeded(0) == true)
+assert(prl.failed(0) == false)
+assert(prl.result_to_string(0) == "PRL_ERR_SUCCESS")
+
+assert(prl.succeeded(c) == false)
+assert(prl.failed(c) == true)
+assert(prl.result_to_string(c) == "PRL_ERR_API_WASNT_INITIALIZED")
+
+assert(prl.sdk_wrap.unload())

@@ -15,57 +15,40 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-prl.  If not, see <http://www.gnu.org/licenses/>.
 
-extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
-}
-
-#include <SdkWrap.h>
-
 #include <vector>
 
-#include "dromozoa/bind.hpp"
-
-#include "error.hpp"
-#include "handle.hpp"
-#include "vm_configuration.hpp"
+#include "common.hpp"
 
 namespace dromozoa {
-  using bind::function;
-
   namespace {
-    int impl_get_name(lua_State* L) {
-      PRL_HANDLE handle = get_handle(L, 1);
+    void impl_get_name(lua_State* L) {
+      PRL_HANDLE handle = check_handle(L, 1);
       PRL_UINT32 size = 0;
       PRL_RESULT result = PrlVmCfg_GetName(handle, 0, &size);
-      if (PRL_FAILED(result)) {
-        return push_error(L, result);
-      }
-      std::vector<char> buffer(size);
-      result = PrlVmCfg_GetName(handle, &buffer[0], &size);
-      if (PRL_FAILED(result)) {
-        return push_error(L, result);
+      if (PRL_SUCCEEDED(result)) {
+        std::vector<char> buffer(size);
+        result = PrlVmCfg_GetName(handle, &buffer[0], &size);
+        if (PRL_SUCCEEDED(result)) {
+          luaX_push(L, &buffer[0]);
+        } else {
+          push_error(L, result);
+        }
       } else {
-        lua_pushstring(L, &buffer[0]);
-        return 1;
+        push_error(L, result);
       }
     }
-
   }
 
-  int open_vm_configuration(lua_State* L) {
+  void initialize_virtual_machine(lua_State* L);
+
+  void initialize_vm_configuration(lua_State* L) {
     lua_newtable(L);
-    function<impl_get_name>::set_field(L, "get_name");
+    {
+      inherit_handle(L, "dromozoa.prl.vm_configuration");
+      luaX_set_field(L, -1, "get_name", impl_get_name);
+    }
+    luaX_set_field(L, -2, "vm_configuration");
 
-    luaL_getmetatable(L, "dromozoa.prl.handle");
-    lua_setmetatable(L, -2);
-
-    luaL_newmetatable(L, "dromozoa.prl.vm_configuration");
-    lua_pushvalue(L, -2);
-    lua_setfield(L, -2, "__index");
-    initialize_handle_gc(L);
-    lua_pop(L, 1);
-
-    return 1;
+    initialize_virtual_machine(L);
   }
 }
