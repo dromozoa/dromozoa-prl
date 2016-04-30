@@ -24,7 +24,19 @@ LDFLAGS = -L$(LUA_LIBDIR) $(LIBFLAG)
 LDLIBS = -ldl
 
 TARGET = prl.so
-OBJS = SdkWrap.o api.o enum.o handle.o job.o key.o module.o result.o sdk_wrap.o server.o virtual_machine.o vm_configuration.o
+OBJS = \
+	SdkWrap.o \
+	api.o \
+	enum.o \
+	handle.o \
+	job.o \
+	key.o \
+	module.o \
+	result.o \
+	sdk_wrap.o \
+	server.o \
+	virtual_machine.o \
+	vm_configuration.o
 
 all: $(TARGET)
 
